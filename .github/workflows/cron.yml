@@ -1,0 +1,37 @@
+name: Trigger Time Capsule Unlock Cron
+
+on:
+  schedule:
+    # Runs every 15 minutes
+    - cron: "*/15 * * * *"
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  trigger-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Unlock Cron Endpoint
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ] || [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "❌ Error: APP_URL or CRON_SECRET secret is not set in repository secrets."
+            exit 1
+          fi
+
+          BASE_URL="${{ secrets.APP_URL }}"
+          BASE_URL="${BASE_URL%/}"
+
+          echo "Triggering ${BASE_URL}/api/cron/unlock..."
+          HTTP_RESPONSE=$(curl -s -o response.json -w "%{http_code}" \
+            -X GET "${BASE_URL}/api/cron/unlock" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          echo "Response code: ${HTTP_RESPONSE}"
+          cat response.json
+          echo ""
+
+          if [ "$HTTP_RESPONSE" -ne 200 ]; then
+            echo "❌ Cron failed with HTTP status ${HTTP_RESPONSE}"
+            exit 1
+          fi
+
+          echo "✅ Time capsule unlock cron executed successfully!"
