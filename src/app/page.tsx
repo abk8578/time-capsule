@@ -1,3 +1,6 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import LandingGsapProvider from "@/components/landing/LandingGsapProvider";
 import NightSkyBackground from "@/components/nightsky/NightSkyBackground";
 import LandingHero from "@/components/landing/LandingHero";
@@ -9,7 +12,14 @@ import SecurityBanner from "@/components/landing/SecurityBanner";
 import FaqAccordion from "@/components/landing/FaqAccordion";
 import FinalCtaSection from "@/components/landing/FinalCtaSection";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
   return (
     <LandingGsapProvider>
       <div className="relative isolate flex flex-1 flex-col items-center justify-center overflow-hidden bg-bg text-text transition-colors duration-200">

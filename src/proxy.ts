@@ -15,6 +15,15 @@ export async function proxy(req: NextRequest) {
   const isAuthenticated = !!token;
   const { pathname } = req.nextUrl;
 
+  // 1. If user is already authenticated and visits home page or auth pages, redirect to dashboard
+  if (
+    isAuthenticated &&
+    (pathname === "/" || pathname === "/login" || pathname === "/signup")
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // 2. Protect dashboard & capsules from unauthenticated users
   const isProtected =
     pathname.startsWith("/dashboard") || pathname.startsWith("/capsules");
 
@@ -28,7 +37,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/capsules/:path*"],
+  matcher: ["/", "/login", "/signup", "/dashboard/:path*", "/capsules/:path*"],
 };
 
 export default proxy;

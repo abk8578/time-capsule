@@ -1,9 +1,10 @@
 name: Trigger Time Capsule Unlock Cron
 
 on:
-  schedule:
-    # Runs every 15 minutes
-    - cron: "*/15 * * * *"
+  # NOTE: Schedule is disabled during development so GitHub doesn't fail every 15 mins.
+  # Enable this only after deploying live and adding APP_URL & CRON_SECRET to GitHub Secrets.
+  # schedule:
+  #   - cron: "*/15 * * * *"
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
@@ -13,8 +14,8 @@ jobs:
       - name: Call Unlock Cron Endpoint
         run: |
           if [ -z "${{ secrets.APP_URL }}" ] || [ -z "${{ secrets.CRON_SECRET }}" ]; then
-            echo "❌ Error: APP_URL or CRON_SECRET secret is not set in repository secrets."
-            exit 1
+            echo "⚠️ APP_URL or CRON_SECRET is not set in repository secrets. Skipping cron execution."
+            exit 0
           fi
 
           BASE_URL="${{ secrets.APP_URL }}"

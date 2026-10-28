@@ -46,19 +46,45 @@ export default function Navbar() {
   const handleSignOut = async () => {
     try {
       if (typeof window !== "undefined") {
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith("time_capsule_draft_v1")) {
-            keysToRemove.push(key);
+        // 1. Thoroughly wipe all localStorage & sessionStorage so no lingering user data/drafts remain
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // 2. Clear client-accessible cookies
+        document.cookie.split(";").forEach((cookie) => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
           }
-        }
-        keysToRemove.forEach((k) => localStorage.removeItem(k));
+        });
       }
     } catch {
-      // Safe cleanup if localStorage is inaccessible
+      // Safe cleanup if storage is restricted
     }
-    await signOut({ callbackUrl: "/login" });
+
+    try {
+      // 3. Clear server-side session cookies via dedicated endpoint
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch {
+      // Ignore network errors
+    }
+
+    try {
+      // 4. Invalidate NextAuth client cache
+      await signOut({ redirect: false });
+    } catch {
+      // Ignore if next-auth client fails
+    }
+
+    // 5. Force hard full-page navigation to /login to flush client state
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -210,6 +236,7 @@ export default function Navbar() {
 
                 <button
                   type="button"
+                  id="nav-logout-mobile"
                   onClick={handleSignOut}
                   className="flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-mono text-rose-500 hover:bg-rose-500/10 transition cursor-pointer text-left"
                 >
