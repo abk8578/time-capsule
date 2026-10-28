@@ -69,9 +69,11 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error: unknown) {
+    const errorMsg =
+      error instanceof Error ? error.message : "Something went wrong while registering your account";
     console.error("[Register API Error]:", error);
     return NextResponse.json(
-      { error: "Something went wrong while registering your account" },
+      { error: errorMsg },
       { status: 500 }
     );
   }
