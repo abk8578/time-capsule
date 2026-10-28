@@ -15,9 +15,22 @@ import FinalCtaSection from "@/components/landing/FinalCtaSection";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-  if (session?.user) {
-    redirect("/dashboard");
+  try {
+    const session = await getServerSession(authOptions);
+    if (session?.user) {
+      redirect("/dashboard");
+    }
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      typeof (error as { digest: string }).digest === "string" &&
+      (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+    console.warn("[Landing Page Auth Notice]:", error);
   }
 
   return (

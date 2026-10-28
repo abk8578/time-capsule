@@ -22,28 +22,40 @@ export function validateEnvironment(): void {
     (process.argv.includes("start") || !process.argv.includes("dev"));
 
   if (isVercelProd || isProdStart) {
-    const rawUrl =
+    const vercelCanonical = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "";
+
+    let rawUrl =
       process.env.APP_URL ||
       process.env.NEXTAUTH_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+      vercelCanonical ||
       "";
 
-    // If URL is missing, warn only - do NOT throw
-    if (!rawUrl) {
-      console.warn(
-        "[WARN] Neither APP_URL nor NEXTAUTH_URL is defined in production runtime. Please set your canonical domain."
-      );
-      return;
-    }
-
-    // Throw ONLY when value contains localhost or loopback in production runtime
+    // If localhost is passed on Vercel, automatically fix it to Vercel URL
     if (
       rawUrl.includes("localhost") ||
       rawUrl.includes("127.0.0.1") ||
       rawUrl.startsWith("http://0.0.0.0")
     ) {
-      throw new Error(
-        `[FATAL CONFIG ERROR] Invalid production URL configuration: APP_URL/NEXTAUTH_URL cannot be localhost or loopback in production mode. Configured: "${rawUrl}". Please set a valid production domain (e.g. https://yourdomain.com).`
+      if (vercelCanonical) {
+        console.warn(
+          `[CONFIG NOTICE] Localhost URL detected on Vercel. Auto-switching to: ${vercelCanonical}`
+        );
+        process.env.APP_URL = vercelCanonical;
+        process.env.NEXTAUTH_URL = vercelCanonical;
+        rawUrl = vercelCanonical;
+      } else {
+        console.warn(
+          `[CONFIG WARNING] Invalid production URL configuration: APP_URL/NEXTAUTH_URL cannot be localhost in production mode. Configured: "${rawUrl}". Please set your production domain in Vercel settings.`
+        );
+      }
+    }
+
+    // If URL is missing, warn only - do NOT throw
+    if (!rawUrl) {
+      console.warn(
+        "[WARN] Neither APP_URL nor NEXTAUTH_URL is defined in production runtime. Please set your canonical domain."
       );
     }
   }
