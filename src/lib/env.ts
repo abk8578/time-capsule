@@ -22,7 +22,11 @@ export function validateEnvironment(): void {
     (process.argv.includes("start") || !process.argv.includes("dev"));
 
   if (isVercelProd || isProdStart) {
-    const rawUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "";
+    const rawUrl =
+      process.env.APP_URL ||
+      process.env.NEXTAUTH_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+      "";
 
     // If URL is missing, warn only - do NOT throw
     if (!rawUrl) {
@@ -43,6 +47,19 @@ export function validateEnvironment(): void {
       );
     }
   }
+}
+
+/**
+ * Helper to safely resolve the canonical application URL in all environments
+ * (Local dev, Vercel preview, and production).
+ */
+export function getAppUrl(): string {
+  const url =
+    process.env.APP_URL ||
+    process.env.NEXTAUTH_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "http://localhost:3000";
+  return url.replace(/\/+$/, "");
 }
 
 // Automatically validate on module import in server runtime

@@ -13,7 +13,7 @@ const authHandler: (
   ctx: RouteHandlerContext
 ) => Promise<Response> = NextAuth(authOptions);
 
-function syncDevNextAuthUrl(req: NextRequest) {
+function syncNextAuthUrl(req: NextRequest) {
   if (process.env.NODE_ENV !== "production") {
     const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
     const proto =
@@ -22,15 +22,17 @@ function syncDevNextAuthUrl(req: NextRequest) {
     if (host) {
       process.env.NEXTAUTH_URL = `${proto}://${host}`;
     }
+  } else if (!process.env.NEXTAUTH_URL && process.env.VERCEL_URL) {
+    process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
   }
 }
 
 export async function GET(req: NextRequest, ctx: RouteHandlerContext) {
-  syncDevNextAuthUrl(req);
+  syncNextAuthUrl(req);
   return authHandler(req, ctx);
 }
 
 export async function POST(req: NextRequest, ctx: RouteHandlerContext) {
-  syncDevNextAuthUrl(req);
+  syncNextAuthUrl(req);
   return authHandler(req, ctx);
 }
