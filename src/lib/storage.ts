@@ -1,18 +1,61 @@
 import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
 import type { ICapsuleImage } from "@/types";
 
 export const BUCKET_NAME = "capsule-images";
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+export const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB max raw upload before compression
 export const MAX_FILE_COUNT = 5;
-export const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+  "image/tiff",
+  "image/bmp",
+  "image/heic",
+  "image/heif",
+  "image/svg+xml",
+] as const;
 
 export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
 
-export const MIME_TO_EXT: Record<AllowedMimeType, string> = {
+export const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
+  "image/jpg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+  "image/tiff": "tiff",
+  "image/bmp": "bmp",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/svg+xml": "svg",
 };
+
+/**
+ * Checks whether an incoming MIME type represents an image.
+ */
+export function isAllowedImageMimeType(mime: string): boolean {
+  if (!mime || typeof mime !== "string") return false;
+  const normalized = mime.split(";")[0].trim().toLowerCase();
+  return (
+    normalized.startsWith("image/") ||
+    Boolean(MIME_TO_EXT[normalized]) ||
+    (ALLOWED_MIME_TYPES as readonly string[]).includes(normalized)
+  );
+}
+
+/**
+ * Returns a file extension for a given image MIME type.
+ */
+export function getImageExtensionFromMime(mime: string): string {
+  if (!mime || typeof mime !== "string") return "jpg";
+  const normalized = mime.split(";")[0].trim().toLowerCase();
+  return MIME_TO_EXT[normalized] || "jpg";
+}
 
 export const ALLOWED_AUDIO_MIME_TYPES = [
   "audio/mpeg",
@@ -31,6 +74,56 @@ export const AUDIO_MIME_TO_EXT: Record<AllowedAudioMimeType, string> = {
 };
 
 export const MAX_AUDIO_SIZE = 25 * 1024 * 1024; // 25 MB
+
+/**
+ * Uses sharp to convert and compress any uploaded image into a high-performance WebP buffer.
+ * - Auto-orients image using EXIF orientation tags.
+ * - Resizes max dimension to 2560px (preserves aspect ratio without upscaling).
+ * - Compresses with quality: 80 and effort: 4.
+ * - Validates authentic image format using sharp metadata decoding.
+ */
+export async function compressImageToWebp(buffer: Buffer): Promise<{
+  buffer: Buffer;
+  mimeType: "image/webp";
+  size: number;
+  width?: number;
+  height?: number;
+  format?: string;
+}> {
+  try {
+    const pipeline = sharp(buffer);
+    const metadata = await pipeline.metadata();
+
+    if (!metadata.format) {
+      throw new Error("Invalid or unreadable image file data.");
+    }
+
+    const compressedBuffer = await pipeline
+      .rotate() // auto-orient based on EXIF
+      .resize({
+        width: 2560,
+        height: 2560,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({
+        quality: 80,
+        effort: 4,
+      })
+      .toBuffer();
+
+    return {
+      buffer: compressedBuffer,
+      mimeType: "image/webp",
+      size: compressedBuffer.length,
+      width: metadata.width,
+      height: metadata.height,
+      format: metadata.format,
+    };
+  } catch (err: any) {
+    throw new Error(`Image compression failed: ${err?.message || "Corrupted or unsupported format"}`);
+  }
+}
 
 /**
  * Returns a Supabase client authenticated with the Service Role key.
@@ -56,11 +149,11 @@ export function getSupabaseAdmin() {
 
 /**
  * Inspects binary magic bytes to ensure file content actually matches an allowed image type.
- * Prevents attackers from uploading malicious executables, SVGs (XSS), or scripts with spoofed extensions.
+ * Supports JPEG, PNG, WebP, GIF, BMP, TIFF, and AVIF.
  */
 export function verifyImageMagicBytes(buffer: Buffer): {
   isValid: boolean;
-  mimeType?: AllowedMimeType;
+  mimeType?: string;
 } {
   if (buffer.length < 12) {
     return { isValid: false };
@@ -90,6 +183,25 @@ export function verifyImageMagicBytes(buffer: Buffer): {
   const webp = buffer.subarray(8, 12).toString("ascii");
   if (riff === "RIFF" && webp === "WEBP") {
     return { isValid: true, mimeType: "image/webp" };
+  }
+
+  // 4. GIF: Starts with GIF87a or GIF89a
+  const gif = buffer.subarray(0, 6).toString("ascii");
+  if (gif === "GIF87a" || gif === "GIF89a") {
+    return { isValid: true, mimeType: "image/gif" };
+  }
+
+  // 5. BMP: Starts with 'BM' (0x42 0x4D)
+  if (buffer[0] === 0x42 && buffer[1] === 0x4d) {
+    return { isValid: true, mimeType: "image/bmp" };
+  }
+
+  // 6. TIFF: Starts with II*\0 (little-endian) or MM\0* (big-endian)
+  if (
+    (buffer[0] === 0x49 && buffer[1] === 0x49 && buffer[2] === 0x2a && buffer[3] === 0x00) ||
+    (buffer[0] === 0x4d && buffer[1] === 0x4d && buffer[2] === 0x00 && buffer[3] === 0x2a)
+  ) {
+    return { isValid: true, mimeType: "image/tiff" };
   }
 
   return { isValid: false };

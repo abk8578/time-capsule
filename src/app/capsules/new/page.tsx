@@ -206,17 +206,20 @@ export default function NewCapsulePage() {
       return;
     }
 
-    const validTypes = ["image/jpeg", "image/png", "image/webp"];
-    const maxSize = 5 * 1024 * 1024; // 5 MB
+    const maxSize = 25 * 1024 * 1024; // 25 MB raw file limit before server-side WebP compression
 
     const newItems: FileWithPreview[] = [];
     for (const file of incoming) {
-      if (!validTypes.includes(file.type)) {
-        setError(`"${file.name}" is not a valid format. Only JPEG, PNG, and WebP are allowed.`);
+      const isImage =
+        file.type.startsWith("image/") ||
+        /\.(jpe?g|png|webp|gif|avif|tiff?|bmp|heic|heif|svg)$/i.test(file.name);
+
+      if (!isImage) {
+        setError(`"${file.name}" is not an image file. Please upload image files only.`);
         return;
       }
       if (file.size > maxSize) {
-        setError(`"${file.name}" exceeds the 5 MB limit.`);
+        setError(`"${file.name}" exceeds the 25 MB limit.`);
         return;
       }
       newItems.push({
@@ -789,12 +792,12 @@ export default function NewCapsulePage() {
                 Click to browse or drop photos here
               </span>
               <span className="text-[11px] text-stone-500 dark:text-stone-400 mt-1 font-mono">
-                JPEG, PNG, or WebP up to 5 MB each ({5 - selectedFiles.length} slots remaining)
+                Any image format up to 25 MB each (auto-converted & compressed to WebP) • {5 - selectedFiles.length} slots remaining
               </span>
               <input
                 type="file"
                 multiple
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.tiff,.bmp,.heic,.heif"
                 onChange={handleFileSelect}
                 className="hidden"
               />

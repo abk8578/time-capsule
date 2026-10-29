@@ -12,6 +12,8 @@ import {
   MAX_FILE_COUNT,
   MIME_TO_EXT,
   type AllowedMimeType,
+  isAllowedImageMimeType,
+  getImageExtensionFromMime,
   ALLOWED_AUDIO_MIME_TYPES,
   MAX_AUDIO_SIZE,
   AUDIO_MIME_TO_EXT,
@@ -105,10 +107,10 @@ export async function POST(req: Request) {
           );
         }
 
-        if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(normalizedMime)) {
+        if (!isAllowedImageMimeType(normalizedMime)) {
           return NextResponse.json(
             {
-              error: `Invalid image type "${normalizedMime}". Only JPEG, PNG, and WebP are allowed.`,
+              error: `Invalid image format "${normalizedMime}". Please attach an image file.`,
             },
             { status: 400 }
           );
@@ -116,7 +118,7 @@ export async function POST(req: Request) {
 
         if (file.size > MAX_FILE_SIZE) {
           return NextResponse.json(
-            { error: "Image file exceeds the 5 MB limit." },
+            { error: "Image file exceeds the 25 MB size limit." },
             { status: 400 }
           );
         }
@@ -143,7 +145,7 @@ export async function POST(req: Request) {
         key = `capsules/${session.user.id}/audio/${uuid}.${ext}`;
         mediaType = "audio";
       } else {
-        const ext = MIME_TO_EXT[normalizedMime as AllowedMimeType] || "jpg";
+        const ext = getImageExtensionFromMime(normalizedMime);
         // Key format: capsules/<userId>/<uuid>.<ext>
         key = `capsules/${session.user.id}/${uuid}.${ext}`;
         mediaType = "image";

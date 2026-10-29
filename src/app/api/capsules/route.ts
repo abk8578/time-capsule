@@ -12,6 +12,7 @@ import {
   MAX_FILE_COUNT,
   MAX_FILE_SIZE,
   MAX_AUDIO_SIZE,
+  compressImageToWebp,
   verifyImageMagicBytes,
   verifyAudioMagicBytes,
   readStorageObjectHeaderAndPrefix,
@@ -225,27 +226,56 @@ export async function POST(req: Request) {
         // Validate actual file size
         if (buffer.length > MAX_FILE_SIZE) {
           return NextResponse.json(
-            { error: "One or more uploaded images exceed the 5 MB limit." },
+            { error: "One or more uploaded images exceed the 25 MB limit." },
             { status: 400 }
           );
         }
 
-        // Validate real file type from binary magic bytes (never trust extension or client MIME)
-        const magic = verifyImageMagicBytes(buffer);
-        if (!magic.isValid || !magic.mimeType) {
+        // Convert and compress to WebP using sharp (auto-orients and resizes if needed)
+        let compressed;
+        try {
+          compressed = await compressImageToWebp(buffer);
+        } catch (sharpErr: any) {
           return NextResponse.json(
             {
-              error:
-                "Invalid image file signature. Only authentic JPEG, PNG, and WebP files are accepted.",
+              error: `Invalid image: ${sharpErr?.message || "File could not be decoded as an image."}`,
             },
             { status: 400 }
           );
         }
 
+        // Target key with .webp extension
+        const webpKey = key.replace(/\.[^.]+$/, "") + ".webp";
+
+        // Upload compressed WebP to Supabase storage
+        const { error: uploadError } = await supabase!.storage
+          .from(BUCKET_NAME)
+          .upload(webpKey, compressed.buffer, {
+            contentType: "image/webp",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("[Storage WebP Upload Error]:", uploadError);
+          return NextResponse.json(
+            { error: "Failed to store compressed WebP image in vault." },
+            { status: 500 }
+          );
+        }
+
+        // If the original upload key had a different extension, remove the raw uncompressed file
+        if (key !== webpKey) {
+          await supabase!.storage.from(BUCKET_NAME).remove([key]).catch(() => {});
+        }
+
+        if (!uploadedKeysToRollback.includes(webpKey)) {
+          uploadedKeysToRollback.push(webpKey);
+        }
+
         validatedImages.push({
-          key,
-          mimeType: magic.mimeType,
-          size: buffer.length,
+          key: webpKey,
+          mimeType: "image/webp",
+          size: compressed.size,
         });
       }
     }
