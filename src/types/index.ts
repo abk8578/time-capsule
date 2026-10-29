@@ -10,9 +10,60 @@ export interface IUser {
   name: string;
   passwordHash: string;
   role?: "user" | "admin";
+  isSuspended?: boolean;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;
+}
+
+export interface IAdminLog {
+  _id: string | Types.ObjectId;
+  action: string;
+  adminEmail: string;
+  details?: Record<string, unknown> | string | null;
+  ip: string;
+  userAgent: string;
+  createdAt: Date;
+}
+
+export interface AdminStatsDTO {
+  totalUsers: number;
+  newUsersLast7Days: number;
+  totalCapsules: number;
+  lockedCapsules: number;
+  unlockedCapsules: number;
+  openingNext7Days: number;
+  signupsLast30Days: { date: string; count: number }[];
+}
+
+export interface AdminUserDTO {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  isSuspended: boolean;
+  capsuleCount: number;
+  lockedCount: number;
+  unlockedCount: number;
+}
+
+export interface AdminCapsuleDTO {
+  id: string;
+  title: string;
+  content?: string;
+  unlockAt: string;
+  createdAt: string;
+  isUnlocked: boolean;
+  creator: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  recipientEmail?: string | null;
+  recipientName?: string | null;
+  imageCount: number;
+  hasAudio: boolean;
+  openedEarlyAt?: string | null;
 }
 
 export interface ICapsuleImage {

@@ -69,17 +69,24 @@ async function run() {
     const passwordHash = await bcrypt.hash(adminPassword, 12);
 
     if (existing) {
-      existing.name = adminName;
-      existing.passwordHash = passwordHash;
-      existing.role = "admin";
-      await existing.save();
+      await User.updateOne(
+        { _id: existing._id },
+        {
+          $set: {
+            name: adminName,
+            passwordHash,
+            role: "admin",
+            isSuspended: false,
+          },
+        }
+      );
 
       console.log("\n========================================");
       console.log("✅ Existing user successfully updated to ADMIN!");
       console.log("----------------------------------------");
       console.log(`Email:    ${adminEmail}`);
       console.log(`Password: ${adminPassword}`);
-      console.log(`Role:     ${existing.role}`);
+      console.log(`Role:     admin`);
       console.log("========================================\n");
     } else {
       const newUser = await User.create({
@@ -87,6 +94,7 @@ async function run() {
         name: adminName,
         passwordHash,
         role: "admin",
+        isSuspended: false,
       });
 
       console.log("\n========================================");

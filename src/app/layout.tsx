@@ -43,6 +43,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${fraunces.variable} ${inter.variable} h-full`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=sessionStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-bg text-text antialiased selection:bg-accent/30 selection:text-accent-text relative">
         {/* Subtle cinematic SVG film grain noise overlay */}
         <div className="film-grain" aria-hidden="true" />

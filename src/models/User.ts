@@ -27,6 +27,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ["user", "admin"],
       default: "user",
+      select: false,
+    },
+    isSuspended: {
+      type: Boolean,
+      default: false,
     },
     resetPasswordToken: {
       type: String,

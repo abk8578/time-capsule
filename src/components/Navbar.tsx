@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Compass,
+  Shield,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -19,6 +20,11 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const isLoading = status === "loading";
+
+  // Hide public Navbar completely on /admin routes
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -46,8 +52,12 @@ export default function Navbar() {
   const handleSignOut = async () => {
     try {
       if (typeof window !== "undefined") {
-        // 1. Thoroughly wipe user session data from sessionStorage
+        // 1. Thoroughly wipe user session data from sessionStorage while preserving theme preference
+        const currentTheme = sessionStorage.getItem("theme");
         sessionStorage.clear();
+        if (currentTheme) {
+          sessionStorage.setItem("theme", currentTheme);
+        }
 
         // 2. Clear client-accessible cookies
         document.cookie.split(";").forEach((cookie) => {

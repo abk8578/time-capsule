@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/mongodb";
 import Capsule from "@/models/Capsule";
+import User from "@/models/User";
 import { encryptContent } from "@/lib/crypto";
 import {
   getSupabaseAdmin,
@@ -82,6 +83,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Unauthorized. Please log in to create a capsule." },
         { status: 401 }
+      );
+    }
+
+    await connectToDatabase();
+    const currentUser = await User.findById(session.user.id).select("+isSuspended");
+    if (!currentUser || currentUser.isSuspended) {
+      return NextResponse.json(
+        { error: "Your account is suspended. Capsule creation is disabled." },
+        { status: 403 }
       );
     }
 

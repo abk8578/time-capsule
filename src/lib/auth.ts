@@ -25,10 +25,16 @@ export const authOptions: NextAuthOptions = {
 
         await connectToDatabase();
 
-        const user = await User.findOne({ email: normalizedEmail });
+        const user = await User.findOne({ email: normalizedEmail }).select(
+          "+role +isSuspended +passwordHash"
+        );
         if (!user || !user.passwordHash) {
           // Never reveal whether an email exists or not
           throw new Error("Invalid email or password");
+        }
+
+        if (user.isSuspended) {
+          throw new Error("Your account has been suspended. Please contact support.");
         }
 
         const isValidPassword = await bcrypt.compare(
