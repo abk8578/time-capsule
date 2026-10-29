@@ -1,6 +1,10 @@
 import type { DefaultSession } from "next-auth";
 import type { Types } from "mongoose";
 
+export interface IUserSettings {
+  theme: "dark" | "light";
+}
+
 /**
  * User interface representing a registered account in MongoDB.
  */
@@ -11,6 +15,7 @@ export interface IUser {
   passwordHash: string;
   role?: "user" | "admin";
   isSuspended?: boolean;
+  settings?: IUserSettings;
   lastSeenNewslettersAt?: Date | null;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
@@ -161,12 +166,14 @@ declare module "next-auth" {
     user: {
       id: string;
       role?: string;
+      settings?: IUserSettings;
     } & DefaultSession["user"];
   }
 
   interface User {
     id: string;
     role?: string;
+    settings?: IUserSettings;
   }
 }
 
@@ -174,5 +181,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     role?: string;
+    settings?: IUserSettings;
   }
 }

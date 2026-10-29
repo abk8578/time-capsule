@@ -33,6 +33,13 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    settings: {
+      theme: {
+        type: String,
+        enum: ["dark", "light"],
+        default: "light",
+      },
+    },
     lastSeenNewslettersAt: {
       type: Date,
       default: null,

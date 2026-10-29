@@ -59,11 +59,11 @@ export default function Navbar() {
           sessionStorage.setItem("theme", currentTheme);
         }
 
-        // 2. Clear client-accessible cookies
+        // 2. Clear client-accessible cookies (preserving theme preference)
         document.cookie.split(";").forEach((cookie) => {
           const eqPos = cookie.indexOf("=");
           const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-          if (name) {
+          if (name && name !== "theme") {
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
           }
         });

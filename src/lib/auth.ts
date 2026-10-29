@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
 
         const user = await User.findOne({ email: normalizedEmail }).select(
-          "+role +isSuspended +passwordHash"
+          "+role +isSuspended +passwordHash settings"
         );
         if (!user || !user.passwordHash) {
           // Never reveal whether an email exists or not
@@ -52,6 +52,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role || "user",
+          settings: user.settings || { theme: "dark" },
         };
       },
     }),
@@ -61,6 +62,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.settings = user.settings;
       }
       return token;
     },
@@ -68,6 +70,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = (token.id as string) || (token.sub as string) || "";
         session.user.role = (token.role as string) || "user";
+        session.user.settings = token.settings as any;
       }
       return session;
     },
