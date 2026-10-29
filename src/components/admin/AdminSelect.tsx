@@ -58,7 +58,7 @@ export default function AdminSelect({
   }, [open]);
 
   return (
-    <div ref={containerRef} className={`relative inline-block ${className}`}>
+    <div ref={containerRef} className={`relative inline-block ${open ? "z-50" : "z-auto"} ${className}`}>
       {/* Trigger Button */}
       <button
         type="button"
@@ -85,7 +85,7 @@ export default function AdminSelect({
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 top-full mt-1.5 z-50 min-w-[180px] rounded-2xl border border-border bg-card p-1.5 shadow-2xl backdrop-blur-2xl transition-all animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-1.5 z-[100] min-w-[180px] rounded-2xl border border-border bg-card p-1.5 shadow-2xl backdrop-blur-2xl transition-all animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="space-y-1">
             {options.map((option) => {

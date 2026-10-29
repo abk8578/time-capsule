@@ -88,11 +88,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-colors duration-200 ${
-        scrolled
-          ? "border-b border-border bg-card/85 backdrop-blur-2xl shadow-xs"
-          : "border-b border-transparent bg-transparent"
-      }`}
+      className={`sticky top-0 z-40 w-full transition-colors duration-200 ${scrolled
+        ? "border-b border-border bg-card/85 backdrop-blur-2xl shadow-xs"
+        : "border-b border-transparent bg-transparent"
+        }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo: Cosmic Celestial Star Astrolabe */}
@@ -126,11 +125,10 @@ export default function Navbar() {
               <Link
                 href="/dashboard"
                 id="nav-dashboard"
-                className={`text-xs font-mono uppercase tracking-wider px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors ${
-                  pathname === "/dashboard"
-                    ? "text-accent-text font-semibold bg-accent/15 border border-accent/30"
-                    : "text-muted hover:text-text hover:bg-border/30"
-                }`}
+                className={`text-xs font-mono uppercase tracking-wider px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors ${pathname === "/dashboard"
+                  ? "text-accent-text font-semibold bg-accent/15 border border-accent/30"
+                  : "text-muted hover:text-text hover:bg-border/30"
+                  }`}
               >
                 <Compass className="h-3.5 w-3.5 text-accent" />
                 <span>Constellation</span>

@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
+      <div className="relative z-20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
         <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none" />
@@ -226,7 +226,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-xl shadow-xs">
+      <div className="relative z-10 overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-xl shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border bg-card/80 font-mono text-[11px] uppercase tracking-wider text-muted">

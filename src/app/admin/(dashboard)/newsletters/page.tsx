@@ -187,7 +187,7 @@ export default function AdminNewslettersPage() {
       )}
 
       {/* Controls & Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="relative z-20 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <input
@@ -220,7 +220,7 @@ export default function AdminNewslettersPage() {
       </div>
 
       {/* Table Section */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+      <div className="relative z-10 rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead className="border-b border-border bg-card/60 uppercase tracking-widest text-muted text-[10px]">

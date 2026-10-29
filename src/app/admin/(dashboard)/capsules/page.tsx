@@ -192,7 +192,7 @@ export default function AdminCapsulesPage() {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="space-y-3 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
+      <div className="relative z-20 space-y-3 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
         <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Keyword Search */}
           <div className="relative flex-1">
@@ -261,7 +261,7 @@ export default function AdminCapsulesPage() {
       </div>
 
       {/* Capsules Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-xl shadow-xs">
+      <div className="relative z-10 overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-xl shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border bg-card/80 font-mono text-[11px] uppercase tracking-wider text-muted">
