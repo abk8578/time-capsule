@@ -169,7 +169,8 @@ export async function POST(req: Request) {
       }
     }
 
-    const supabase = getSupabaseAdmin();
+    const hasImages = Boolean(imageKeys && Array.isArray(imageKeys) && imageKeys.length > 0);
+    const supabase = hasImages ? getSupabaseAdmin() : null;
 
     // 1. Validate and inspect uploaded images if any
     const validatedImages: ICapsuleImage[] = [];
@@ -198,7 +199,7 @@ export async function POST(req: Request) {
         }
 
         // Verify object existence and fetch content to inspect real magic bytes
-        const { data, error } = await supabase.storage
+        const { data, error } = await supabase!.storage
           .from(BUCKET_NAME)
           .download(key);
 
