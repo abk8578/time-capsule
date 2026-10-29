@@ -154,12 +154,21 @@ function LoginForm() {
         </div>
 
         <div>
-          <label
-            htmlFor="login-password"
-            className="block text-[11px] font-mono uppercase tracking-widest text-muted mb-1.5"
-          >
-            Secret key (Password)
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label
+              htmlFor="login-password"
+              className="block text-[11px] font-mono uppercase tracking-widest text-muted"
+            >
+              Secret key (Password)
+            </label>
+            <Link
+              id="link-to-forgot-password"
+              href="/forgot-password"
+              className="text-[11px] font-mono text-amber-400/90 hover:text-amber-300 hover:underline transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative group">
             <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted transition-colors group-focus-within:text-amber-400" />
             <input

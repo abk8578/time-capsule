@@ -26,11 +26,11 @@ export default function DigUpRevealer({ capsuleId, children }: DigUpRevealerProp
         prefersReduced = false;
       }
 
-      // 2. Check localStorage (once per capsule per browser)
+      // 2. Check sessionStorage (once per capsule per browser session)
       let alreadySeen = false;
       const storageKey = `capsule_unsealed_${capsuleId}`;
       try {
-        alreadySeen = !!localStorage.getItem(storageKey);
+        alreadySeen = !!sessionStorage.getItem(storageKey);
       } catch {
         alreadySeen = false;
       }
@@ -51,11 +51,11 @@ export default function DigUpRevealer({ capsuleId, children }: DigUpRevealerProp
       }, 800);
 
       finishTimer = setTimeout(() => {
-        // Stage 3: Animation complete, save to localStorage
+        // Stage 3: Animation complete, save to sessionStorage
         try {
-          localStorage.setItem(storageKey, "true");
+          sessionStorage.setItem(storageKey, "true");
         } catch {
-          // Handle localStorage failure or disabled gracefully
+          // Handle sessionStorage failure or disabled gracefully
         }
         setStage("completed");
       }, 2100);
@@ -70,7 +70,7 @@ export default function DigUpRevealer({ capsuleId, children }: DigUpRevealerProp
 
   const handleSkip = () => {
     try {
-      localStorage.setItem(`capsule_unsealed_${capsuleId}`, "true");
+      sessionStorage.setItem(`capsule_unsealed_${capsuleId}`, "true");
     } catch {
       // Graceful fallback
     }

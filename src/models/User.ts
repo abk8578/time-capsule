@@ -28,6 +28,12 @@ const UserSchema = new Schema<IUser>(
       enum: ["user", "admin"],
       default: "user",
     },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

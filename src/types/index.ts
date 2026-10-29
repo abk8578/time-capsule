@@ -10,6 +10,8 @@ export interface IUser {
   name: string;
   passwordHash: string;
   role?: "user" | "admin";
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
 }
 

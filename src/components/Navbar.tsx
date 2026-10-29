@@ -46,8 +46,7 @@ export default function Navbar() {
   const handleSignOut = async () => {
     try {
       if (typeof window !== "undefined") {
-        // 1. Thoroughly wipe all localStorage & sessionStorage so no lingering user data/drafts remain
-        localStorage.clear();
+        // 1. Thoroughly wipe user session data from sessionStorage
         sessionStorage.clear();
 
         // 2. Clear client-accessible cookies
@@ -73,18 +72,8 @@ export default function Navbar() {
       // Ignore network errors
     }
 
-    try {
-      // 4. Invalidate NextAuth client cache
-      await signOut({ redirect: false });
-    } catch {
-      // Ignore if next-auth client fails
-    }
-
-    // 5. Force hard full-page navigation to /login to flush client state
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = "/login";
-    }
+    // 4. Invalidate NextAuth client session and cleanly redirect to /login
+    await signOut({ callbackUrl: "/login" });
   };
 
   return (

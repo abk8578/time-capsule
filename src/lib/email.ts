@@ -330,6 +330,97 @@ export async function sendRecipientUnlockEmail({
   });
 }
 
+interface SendPasswordResetEmailParams {
+  to: string;
+  name: string;
+  resetUrl: string;
+}
+
+/**
+ * Sends a password reset email containing a secure 1-hour access link.
+ */
+export async function sendPasswordResetEmail({
+  to,
+  name,
+  resetUrl,
+}: SendPasswordResetEmailParams) {
+  const safeName = escapeHtml(name || "Time Traveler");
+
+  if (process.env.EMAIL_MODE === "log") {
+    const domain = to.includes("@") ? "@" + to.split("@")[1] : "@unknown";
+    console.log(`[EMAIL_MODE=log] Password reset email dispatched to ${domain}: ${resetUrl}`);
+    return { id: "log-mode", success: true };
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reset Your Secret Key - Time Capsule</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #0F1419; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #F3EBDD;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0F1419; padding: 40px 20px;">
+          <tr>
+            <td align="center">
+              <table width="100%" max-width="580px" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #182029; border: 1px solid #2A3542; border-radius: 16px; overflow: hidden; padding: 36px 32px;">
+                <tr>
+                  <td align="left" style="padding-bottom: 20px;">
+                    <div style="display: inline-block; padding: 8px 14px; background-color: rgba(242, 184, 75, 0.15); border: 1px solid rgba(242, 184, 75, 0.3); border-radius: 9999px; font-size: 12px; font-weight: 600; color: #F2B84B;">
+                      🔑 Security Orbit Transmission
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="left" style="padding-bottom: 16px;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #F3EBDD; line-height: 1.3;">
+                      Reset Your Secret Key
+                    </h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="left" style="padding-bottom: 24px;">
+                    <p style="margin: 0; font-size: 15px; color: #A9B1BC; line-height: 1.6;">
+                      Hello ${safeName},
+                    </p>
+                    <p style="margin: 12px 0 0; font-size: 15px; color: #A9B1BC; line-height: 1.6;">
+                      A request was received to reset the secret key for your Time Capsule constellation account. Click the button below to establish a new key:
+                    </p>
+                    <p style="margin: 12px 0 0; font-size: 13px; color: #F2B84B; font-weight: 500;">
+                      For your security, this reset link will expire in 1 hour.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding: 16px 0 28px;">
+                    <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 14px 32px; background-color: #F2B84B; color: #1A1305; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(242, 184, 75, 0.25);">
+                      Reset My Secret Key &rarr;
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="border-top: 1px solid #2A3542; padding-top: 20px; font-size: 12px; color: #5E5648; line-height: 1.5;">
+                    <p style="margin: 0;">
+                      If you did not request this password reset, you can safely ignore this transmission. Your existing password remains secure.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  return await dispatchEmail({
+    to,
+    subject: "Reset your Time Capsule secret key",
+    html: htmlContent,
+  });
+}
+
 async function dispatchEmail({
   to,
   subject,

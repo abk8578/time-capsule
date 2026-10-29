@@ -98,7 +98,7 @@ export default function NewCapsulePage() {
     let dismissTimer: NodeJS.Timeout;
     const restoreTimer = setTimeout(() => {
       try {
-        const saved = localStorage.getItem(draftKey);
+        const saved = sessionStorage.getItem(draftKey);
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed?.title || parsed?.content) {
@@ -110,7 +110,7 @@ export default function NewCapsulePage() {
           }
         }
       } catch {
-        // Graceful fallback if localStorage is disabled or corrupt
+        // Graceful fallback if sessionStorage is disabled or corrupt
       }
     }, 0);
 
@@ -120,7 +120,7 @@ export default function NewCapsulePage() {
     };
   }, [draftKey]);
 
-  // 2. Autosave title and content every 5 seconds to localStorage
+  // 2. Autosave title and content every 5 seconds to sessionStorage
   // Rule: User-specific key; save ONLY title and content (no recipient email or media);
   // and empty title+content par save na ho (removes existing draft if any).
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function NewCapsulePage() {
 
       if (trimmedTitle.length > 0 || trimmedContent.length > 0) {
         try {
-          localStorage.setItem(
+          sessionStorage.setItem(
             draftKey,
             JSON.stringify({
               title: trimmedTitle,
@@ -148,12 +148,12 @@ export default function NewCapsulePage() {
             })
           );
         } catch {
-          // LocalStorage quota or access error handling
+          // SessionStorage quota or access error handling
         }
       } else {
         // If both title and content are empty, do NOT save and remove any existing draft
         try {
-          localStorage.removeItem(draftKey);
+          sessionStorage.removeItem(draftKey);
         } catch {
           // Safe error catch
         }
@@ -167,7 +167,7 @@ export default function NewCapsulePage() {
   const handleClearDraft = () => {
     if (draftKey) {
       try {
-        localStorage.removeItem(draftKey);
+        sessionStorage.removeItem(draftKey);
       } catch {
         // Safe error catch
       }
@@ -428,7 +428,7 @@ export default function NewCapsulePage() {
       setIsRitualSealed(true);
       if (draftKey) {
         try {
-          localStorage.removeItem(draftKey);
+          sessionStorage.removeItem(draftKey);
         } catch {
           // Safe draft cleanup
         }

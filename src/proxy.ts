@@ -13,12 +13,14 @@ export async function proxy(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET || "fallback-secret-temporal-capsule-key",
     });
 
-    const isAuthenticated = !!token;
-    const { pathname } = req.nextUrl;
+    const isAuthenticated = Boolean(token && (token.id || token.sub || token.email));
+    const { pathname, searchParams } = req.nextUrl;
 
-    // 1. If user is already authenticated and visits home page or auth pages, redirect to dashboard
+    // 1. If user is authenticated and visits auth pages, redirect to dashboard,
+    // UNLESS a callbackUrl is present (prevents infinite redirect loops if session state desyncs)
     if (
       isAuthenticated &&
+      !searchParams.has("callbackUrl") &&
       (pathname === "/" || pathname === "/login" || pathname === "/signup")
     ) {
       return NextResponse.redirect(new URL("/dashboard", req.url));

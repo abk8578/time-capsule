@@ -2,7 +2,7 @@
 
 import React from "react";
 import { SessionProvider } from "next-auth/react";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { MotionConfig } from "motion/react";
 
 interface ProvidersProps {
@@ -11,12 +11,7 @@ interface ProvidersProps {
 
 export default function Providers({ children }: ProvidersProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange={true}
-    >
+    <ThemeProvider>
       <MotionConfig reducedMotion="always">
         <SessionProvider>{children}</SessionProvider>
       </MotionConfig>

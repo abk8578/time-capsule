@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sun, Moon } from "lucide-react";
