@@ -60,10 +60,32 @@ function LoginForm() {
       }
 
       setSuccess(true);
+
+      // Immediate pre-fetch of user settings to synchronize theme before route transition
+      try {
+        const settingsRes = await fetch("/api/user/settings");
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          const t = settingsData?.settings?.theme;
+          if (t === "light" || t === "dark") {
+            localStorage.setItem("theme", t);
+            sessionStorage.setItem("theme", t);
+            document.cookie = `theme=${t}; path=/; max-age=31536000; SameSite=Lax`;
+            if (t === "light") {
+              document.documentElement.classList.remove("dark");
+            } else {
+              document.documentElement.classList.add("dark");
+            }
+          }
+        }
+      } catch {
+        // Safe fallback
+      }
+
       setTimeout(() => {
         router.push(callbackUrl);
         router.refresh();
-      }, 500);
+      }, 300);
     } catch {
       setError("Invalid email or password");
       setLoading(false);

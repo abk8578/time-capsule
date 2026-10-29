@@ -7,11 +7,15 @@ import { MotionConfig } from "motion/react";
 
 interface ProvidersProps {
   children: React.ReactNode;
+  initialTheme?: "dark" | "light";
 }
 
-export default function Providers({ children }: ProvidersProps) {
+export default function Providers({
+  children,
+  initialTheme = "dark",
+}: ProvidersProps) {
   return (
-    <ThemeProvider>
+    <ThemeProvider initialTheme={initialTheme}>
       <MotionConfig reducedMotion="always">
         <SessionProvider>{children}</SessionProvider>
       </MotionConfig>

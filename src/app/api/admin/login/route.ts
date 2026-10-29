@@ -42,9 +42,9 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    // Query user and explicitly select hidden fields & passwordHash
+    // Query user and explicitly select hidden fields, passwordHash & settings
     const user = await User.findOne({ email: normalizedEmail }).select(
-      "+role passwordHash email name isSuspended"
+      "+role passwordHash email name isSuspended settings"
     );
 
     if (!user || !user.passwordHash) {
@@ -97,6 +97,15 @@ export async function POST(req: Request) {
     // Set secure httpOnly admin_token cookie
     const cookieOptions = getAdminJwtCookieOptions();
     response.cookies.set(ADMIN_COOKIE_NAME, jwtToken, cookieOptions);
+
+    // Also synchronize user's saved theme preference cookie
+    if (user.settings?.theme) {
+      response.cookies.set("theme", user.settings.theme, {
+        path: "/",
+        maxAge: 31536000,
+        sameSite: "lax",
+      });
+    }
 
     return response;
   } catch (err) {

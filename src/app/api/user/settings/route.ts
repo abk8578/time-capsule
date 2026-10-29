@@ -56,11 +56,17 @@ export async function GET() {
 
     const theme = user.settings?.theme === "light" ? "light" : "dark";
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       settings: {
         theme,
       },
     });
+    response.cookies.set("theme", theme, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+    });
+    return response;
   } catch (err) {
     console.error("[USER SETTINGS GET ERROR]:", err);
     return NextResponse.json(
@@ -108,13 +114,20 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    return NextResponse.json({
+    const finalTheme = updated.settings?.theme || theme;
+    const response = NextResponse.json({
       success: true,
       message: "User settings updated in database.",
       settings: {
-        theme: updated.settings?.theme || theme,
+        theme: finalTheme,
       },
     });
+    response.cookies.set("theme", finalTheme, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+    });
+    return response;
   } catch (err) {
     console.error("[USER SETTINGS PATCH ERROR]:", err);
     return NextResponse.json(

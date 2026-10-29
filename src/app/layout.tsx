@@ -32,21 +32,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { cookies } from "next/headers";
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const themeVal = cookieStore.get("theme")?.value;
+  const isLight = themeVal === "light";
+  const initialTheme: "dark" | "light" = isLight ? "light" : "dark";
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${inter.variable} h-full`}
+      className={`${fraunces.variable} ${inter.variable} h-full ${isLight ? "" : "dark"}`}
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )theme=([^;]*)/);var t=m?decodeURIComponent(m[1]):null;if(!t){t=sessionStorage.getItem('theme')}if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )theme=([^;]*)/);var t=m?decodeURIComponent(m[1]):null;if(!t){try{t=localStorage.getItem('theme')}catch(e){}}if(t==='light'){document.documentElement.classList.remove('dark')}else if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
       </head>
@@ -55,7 +62,7 @@ export default function RootLayout({
         <div className="film-grain" aria-hidden="true" />
         {/* Celestial trailing starlight cursor on desktop */}
         <CustomCursor />
-        <Providers>
+        <Providers initialTheme={initialTheme}>
           <Navbar />
           <main className="flex-1 flex flex-col relative z-10">{children}</main>
           <Footer />

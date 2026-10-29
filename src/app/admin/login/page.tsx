@@ -55,6 +55,27 @@ export default function AdminLoginPage() {
         // NextAuth sync optional
       }
 
+      // Sync settings to client storage & DOM immediately
+      try {
+        const settingsRes = await fetch("/api/user/settings");
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          const t = settingsData?.settings?.theme;
+          if (t === "light" || t === "dark") {
+            localStorage.setItem("theme", t);
+            sessionStorage.setItem("theme", t);
+            document.cookie = `theme=${t}; path=/; max-age=31536000; SameSite=Lax`;
+            if (t === "light") {
+              document.documentElement.classList.remove("dark");
+            } else {
+              document.documentElement.classList.add("dark");
+            }
+          }
+        }
+      } catch {
+        // Safe fallback
+      }
+
       router.push("/admin");
       router.refresh();
     } catch {
