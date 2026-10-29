@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Sparkles,
   ArrowUp,
@@ -16,8 +17,31 @@ import {
 
 export default function Footer() {
   const pathname = usePathname();
+  const { status } = useSession();
   const [emailInput, setEmailInput] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (status === "authenticated") {
+      fetch("/api/newsletters/unread")
+        .then((res) => (res.ok ? res.json() : { hasUnread: false }))
+        .then((data) => {
+          if (isMounted && data) {
+            setHasUnread(Boolean(data.hasUnread));
+          }
+        })
+        .catch(() => {
+          if (isMounted) setHasUnread(false);
+        });
+    } else {
+      setHasUnread(false);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [status, pathname]);
 
   // Hide public Footer completely on admin routes
   if (pathname?.startsWith("/admin")) {
@@ -94,6 +118,21 @@ export default function Footer() {
                   Constellation Sky
                 </Link>
               </li>
+              {status === "authenticated" && (
+                <li>
+                  <Link
+                    href="/newsletters"
+                    className="hover:text-text transition-colors duration-200 inline-flex items-center gap-2 py-1"
+                  >
+                    <span>Newsletters</span>
+                    {hasUnread && (
+                      <span className="rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-slate-950 uppercase tracking-wider animate-pulse">
+                        New
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/login"

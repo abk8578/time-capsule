@@ -20,6 +20,13 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
+import AdminSelect, { SelectOption } from "@/components/admin/AdminSelect";
+
+const capsuleStatusOptions: SelectOption[] = [
+  { label: "All States", value: "all", icon: <Archive className="h-3.5 w-3.5 text-accent" /> },
+  { label: "Locked Only", value: "locked", icon: <Lock className="h-3.5 w-3.5 text-amber-500" /> },
+  { label: "Unlocked Only", value: "unlocked", icon: <Unlock className="h-3.5 w-3.5 text-emerald-500" /> },
+];
 
 interface AdminCapsule {
   id: string;
@@ -199,55 +206,52 @@ export default function AdminCapsulesPage() {
             />
           </div>
 
-          {/* Status Dropdown */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted shrink-0" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-xl border border-border bg-card/80 px-3 py-2 text-xs font-mono text-text focus:border-accent focus:outline-none cursor-pointer"
-            >
-              <option value="all">All States</option>
-              <option value="locked">Locked Only</option>
-              <option value="unlocked">Unlocked Only</option>
-            </select>
-          </div>
+          {/* Custom Themed Status Dropdown */}
+          <AdminSelect
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val)}
+            options={capsuleStatusOptions}
+          />
 
-          {/* From Date */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-muted uppercase">From:</span>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-xl border border-border bg-card/80 px-2.5 py-1.5 text-xs font-mono text-text focus:border-accent focus:outline-none"
-            />
-          </div>
+          {/* Styled Date Range Group */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card/90 px-3 py-1.5 text-xs font-mono text-text shadow-xs">
+              <Calendar className="h-3.5 w-3.5 text-accent shrink-0" />
+              <span className="text-[10px] uppercase text-muted tracking-wider">From:</span>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="bg-transparent text-xs font-mono text-text focus:outline-none cursor-pointer"
+              />
+            </div>
 
-          {/* To Date */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-muted uppercase">To:</span>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="rounded-xl border border-border bg-card/80 px-2.5 py-1.5 text-xs font-mono text-text focus:border-accent focus:outline-none"
-            />
+            <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card/90 px-3 py-1.5 text-xs font-mono text-text shadow-xs">
+              <Calendar className="h-3.5 w-3.5 text-accent shrink-0" />
+              <span className="text-[10px] uppercase text-muted tracking-wider">To:</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="bg-transparent text-xs font-mono text-text focus:outline-none cursor-pointer"
+              />
+            </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
             <button
               type="submit"
-              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-mono uppercase tracking-wider text-text hover:bg-border/30 transition cursor-pointer"
+              className="galaxy-button inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-mono uppercase tracking-wider font-semibold shadow-xs cursor-pointer"
             >
-              Filter
+              <Filter className="h-3.5 w-3.5" />
+              <span>Apply</span>
             </button>
             {(search || statusFilter !== "all" || fromDate || toDate) && (
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="rounded-xl px-3 py-2 text-xs font-mono text-muted hover:text-text cursor-pointer"
+                className="rounded-xl border border-border bg-card/60 px-3 py-2 text-xs font-mono uppercase tracking-wider text-muted hover:text-text hover:bg-border/30 transition cursor-pointer"
               >
                 Reset
               </button>

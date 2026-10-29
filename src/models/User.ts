@@ -33,6 +33,10 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    lastSeenNewslettersAt: {
+      type: Date,
+      default: null,
+    },
     resetPasswordToken: {
       type: String,
     },

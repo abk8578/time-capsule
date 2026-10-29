@@ -67,9 +67,11 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    // 6. Protect consumer dashboard & capsules from unauthenticated users
+    // 6. Protect consumer dashboard, capsules & newsletters from unauthenticated users
     const isUserProtected =
-      pathname.startsWith("/dashboard") || pathname.startsWith("/capsules");
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/capsules") ||
+      pathname.startsWith("/newsletters");
 
     if (isUserProtected && !isAuthenticated) {
       const loginUrl = new URL("/login", req.url);
@@ -91,6 +93,8 @@ export const config = {
     "/signup",
     "/dashboard/:path*",
     "/capsules/:path*",
+    "/newsletters",
+    "/newsletters/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
   ],

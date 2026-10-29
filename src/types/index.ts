@@ -11,9 +11,22 @@ export interface IUser {
   passwordHash: string;
   role?: "user" | "admin";
   isSuspended?: boolean;
+  lastSeenNewslettersAt?: Date | null;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;
+}
+
+export interface INewsletter {
+  _id: string | Types.ObjectId;
+  title: string;
+  slug: string;
+  content: string;
+  status: "draft" | "published";
+  publishedAt?: Date | null;
+  createdBy: string | Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IAdminLog {

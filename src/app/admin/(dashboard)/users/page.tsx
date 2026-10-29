@@ -19,6 +19,13 @@ import {
   RefreshCw,
   Clock,
 } from "lucide-react";
+import AdminSelect, { SelectOption } from "@/components/admin/AdminSelect";
+
+const userStatusOptions: SelectOption[] = [
+  { label: "All Accounts", value: "all", icon: <Users className="h-3.5 w-3.5 text-accent" /> },
+  { label: "Active Only", value: "active", icon: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> },
+  { label: "Suspended Only", value: "suspended", icon: <XCircle className="h-3.5 w-3.5 text-rose-500" /> },
+];
 
 interface AdminUser {
   id: string;
@@ -211,18 +218,11 @@ export default function AdminUsersPage() {
           </button>
         </form>
 
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted shrink-0" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-border bg-card/80 px-3 py-2 text-xs font-mono text-text focus:border-accent focus:outline-none cursor-pointer"
-          >
-            <option value="all">All Accounts</option>
-            <option value="active">Active Only</option>
-            <option value="suspended">Suspended Only</option>
-          </select>
-        </div>
+        <AdminSelect
+          value={statusFilter}
+          onChange={(val) => setStatusFilter(val)}
+          options={userStatusOptions}
+        />
       </div>
 
       {/* Users Table */}

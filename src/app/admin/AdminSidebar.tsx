@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Users,
   Archive,
+  Newspaper,
   Shield,
   LogOut,
   Menu,
@@ -46,6 +47,12 @@ export default function AdminSidebar({
       href: "/admin/capsules",
       icon: Archive,
       active: pathname.startsWith("/admin/capsules"),
+    },
+    {
+      name: "Newsletters",
+      href: "/admin/newsletters",
+      icon: Newspaper,
+      active: pathname.startsWith("/admin/newsletters"),
     },
   ];
 
