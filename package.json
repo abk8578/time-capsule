@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "create-admin": "node scripts/create-admin.mjs",
+    "db:theme": "node scripts/init-seasonal-theme.mjs",
     "test:supabase": "node scripts/test-supabase.mjs",
     "test:audio": "tsx --test tests/audio-magic-bytes.test.ts",
     "test:step4": "tsx --test tests/step4-features.test.ts",

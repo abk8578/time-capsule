@@ -48,12 +48,13 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-mode={isLight ? "light" : "dark"}
       className={`${fraunces.variable} ${inter.variable} h-full ${isLight ? "" : "dark"}`}
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )theme=([^;]*)/);var t=m?decodeURIComponent(m[1]):null;if(!t){try{t=localStorage.getItem('theme')}catch(e){}}if(t==='light'){document.documentElement.classList.remove('dark')}else if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )theme=([^;]*)/);var t=m?decodeURIComponent(m[1]):null;if(!t){try{t=localStorage.getItem('theme')}catch(e){}}if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.setAttribute('data-mode','light')}else if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.setAttribute('data-mode','dark')};var st=sessionStorage.getItem('active_season');if(st&&st!=='default'){document.documentElement.setAttribute('data-season',st)}else{document.documentElement.setAttribute('data-season','default')}}catch(e){}})()`,
           }}
         />
       </head>

@@ -12,7 +12,7 @@ export default async function AdminDashboardLayout({
   const { user } = await requireAdminPage();
 
   return (
-    <div className="min-h-screen bg-bg text-text antialiased">
+    <div className="min-h-screen bg-bg text-text antialiased" data-season="default">
       <AdminSidebar
         adminEmail={user.email}
         adminName={user.name}

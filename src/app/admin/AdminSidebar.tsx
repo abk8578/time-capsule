@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Compass,
+  Palette,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -53,6 +54,12 @@ export default function AdminSidebar({
       href: "/admin/newsletters",
       icon: Newspaper,
       active: pathname.startsWith("/admin/newsletters"),
+    },
+    {
+      name: "Themes",
+      href: "/admin/themes",
+      icon: Palette,
+      active: pathname.startsWith("/admin/themes"),
     },
   ];
 

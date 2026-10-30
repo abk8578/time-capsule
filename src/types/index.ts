@@ -5,6 +5,34 @@ export interface IUserSettings {
   theme: "dark" | "light";
 }
 
+export type SeasonType = "default" | "halloween" | "diwali" | "christmas";
+export type SeasonalThemeType = SeasonType; // backward-compat alias
+export type ThemeIntensity = 1 | 2 | 3;
+
+export interface ISeasonalTheme {
+  _id: string | Types.ObjectId;
+  auto: boolean;
+  season: SeasonType;
+  theme?: SeasonType; // backward-compat alias
+  intensity: ThemeIntensity;
+  singletonKey: string;
+  updatedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SeasonDTO {
+  auto: boolean;
+  season: SeasonType;
+  activeSeason: SeasonType;
+  intensity: ThemeIntensity;
+  // Aliases for compatibility
+  theme?: SeasonType;
+  activeTheme?: SeasonType;
+}
+
+export type SeasonalThemeDTO = SeasonDTO;
+
 /**
  * User interface representing a registered account in MongoDB.
  */

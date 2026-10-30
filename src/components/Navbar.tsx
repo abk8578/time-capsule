@@ -15,6 +15,7 @@ import {
   Shield,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import SeasonalLogoDecorator from "@/components/seasonal/SeasonalLogoDecorator";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -102,6 +103,7 @@ export default function Navbar() {
         >
           <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 text-slate-950 shadow-md">
             <Sparkles className="h-5 w-5" />
+            <SeasonalLogoDecorator />
           </div>
           <div className="flex flex-col">
             <span className="font-display text-xl tracking-tight text-text flex items-center gap-1">
