@@ -49,7 +49,10 @@ function applySeasonAttribute(target: SeasonType) {
     document.documentElement.setAttribute("data-season", "default");
     return;
   }
-  const cleanSeason = target === "halloween" || target === "christmas" ? target : "default";
+  const cleanSeason =
+    target === "halloween" || target === "christmas" || target === "diwali"
+      ? target
+      : "default";
   document.documentElement.setAttribute("data-season", cleanSeason);
 }
 
@@ -66,7 +69,7 @@ export function SeasonalThemeProvider({
     if (typeof window !== "undefined") {
       try {
         const val = sessionStorage.getItem("active_season") as SeasonType;
-        if (val === "halloween" || val === "christmas" || val === "default") {
+        if (val === "halloween" || val === "christmas" || val === "diwali" || val === "default") {
           cachedSeason = val;
         }
       } catch {

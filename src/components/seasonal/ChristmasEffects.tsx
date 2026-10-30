@@ -26,12 +26,12 @@ interface ChristmasEffectsProps {
 }
 
 const CHRISTMAS_GREETINGS = [
-  "Let it snow! ❄️",
-  "Magic in the air! ✨",
-  "Warm holiday wishes! 🎁",
-  "Peace across time! 🌟",
-  "Merry moments! 🎄",
-  "Starlit memories! 🕯️",
+  "Ho Ho Ho! 🎅",
+  "Santa is flying! 🦌✨",
+  "Merry Christmas! 🎄",
+  "Magic in the air! 🌟",
+  "Holiday cheer unlocked! 🎁",
+  "Peace & Joy across time! ✨",
 ];
 
 export default function ChristmasEffects({
@@ -40,6 +40,7 @@ export default function ChristmasEffects({
 }: ChristmasEffectsProps) {
   const [snowflakes, setSnowflakes] = useState<Snowflake3D[]>([]);
   const [sleigh, setSleigh] = useState<SleighFlight3D | null>(null);
+  const [isFlying, setIsFlying] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
   const [burstCount, setBurstCount] = useState(0);
@@ -47,12 +48,13 @@ export default function ChristmasEffects({
 
   const nextSnowId = useRef(1);
   const nextSleighId = useRef(1);
+  const isFlyingRef = useRef(false);
   const greetingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const sleighSafetyTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Scaled by intensity
   const maxSnow = intensity === 1 ? 16 : intensity === 2 ? 32 : 52;
   const snowIntervalMs = intensity === 1 ? 520 : intensity === 2 ? 300 : 170;
-  const sleighIntervalMs = intensity === 1 ? 14000 : intensity === 2 ? 10000 : 8000;
 
   // Statically generated background star coordinates for celestial twinkling
   const ambientStars = useMemo(() => {
@@ -75,11 +77,20 @@ export default function ChristmasEffects({
   }, []);
 
   const removeSleigh = useCallback(() => {
+    isFlyingRef.current = false;
+    setIsFlying(false);
     setSleigh(null);
   }, []);
 
-  // Handle Snow Globe Click / Touch (Shake the Globe!)
+  // Handle Snow Globe Click / Touch: Sends Santa Flying Across the Sky!
   const handleGlobeClick = () => {
+    // Prevent double-clicking / overlapping runs while Santa is currently flying
+    if (isFlyingRef.current || sleigh !== null) {
+      return;
+    }
+
+    isFlyingRef.current = true;
+    setIsFlying(true);
     setIsShaking(true);
     setBurstCount((prev) => prev + 1);
 
@@ -88,12 +99,19 @@ export default function ChristmasEffects({
       CHRISTMAS_GREETINGS[Math.floor(Math.random() * CHRISTMAS_GREETINGS.length)];
     setGreeting(randomQuote);
 
-    // Play sweet festive chime
+    // Play sweet festive jingle chime
     playJingleChime();
 
-    // Spawn a flurry of fresh snowflakes
+    // Launch Santa in flight across the sky!
+    const flightDuration = 6.2;
+    setSleigh({
+      id: nextSleighId.current++,
+      duration: flightDuration,
+    });
+
+    // Spawn an instant flurry of fresh snowflakes around the globe
     const flurry: Snowflake3D[] = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
       flurry.push({
         id: nextSnowId.current++,
         left: Math.random() * 100,
@@ -107,10 +125,16 @@ export default function ChristmasEffects({
     }
     setSnowflakes((prev) => [...prev, ...flurry]);
 
+    // Safety timeout ensuring lock is released even if animationEnd is suppressed
+    if (sleighSafetyTimeout.current) clearTimeout(sleighSafetyTimeout.current);
+    sleighSafetyTimeout.current = setTimeout(() => {
+      removeSleigh();
+    }, Math.round(flightDuration * 1000 + 300));
+
     if (greetingTimeout.current) clearTimeout(greetingTimeout.current);
     greetingTimeout.current = setTimeout(() => {
       setGreeting(null);
-    }, 2400);
+    }, 2800);
 
     setTimeout(() => {
       setIsShaking(false);
@@ -176,25 +200,15 @@ export default function ChristmasEffects({
 
     const snowTimer = setInterval(spawnSnowflake, snowIntervalMs);
 
-    const spawnSleigh = () => {
-      setSleigh({
-        id: nextSleighId.current++,
-        duration: 7.8,
-      });
-    };
-
-    const firstSleighTimer = setTimeout(spawnSleigh, 2000);
-    const sleighTimer = setInterval(spawnSleigh, sleighIntervalMs);
-
     return () => {
       clearInterval(snowTimer);
-      clearTimeout(firstSleighTimer);
-      clearInterval(sleighTimer);
+      if (sleighSafetyTimeout.current) clearTimeout(sleighSafetyTimeout.current);
       if (greetingTimeout.current) clearTimeout(greetingTimeout.current);
+      isFlyingRef.current = false;
       setSnowflakes([]);
       setSleigh(null);
     };
-  }, [maxSnow, snowIntervalMs, sleighIntervalMs]);
+  }, [maxSnow, snowIntervalMs]);
 
   return (
     <div
@@ -220,23 +234,37 @@ export default function ChristmasEffects({
 
       {/* 2. Interactive 3D Crystal Snow Globe in Bottom Right */}
       <div
-        className="absolute right-4 sm:right-8 bottom-6 sm:bottom-10 z-30 select-none pointer-events-auto"
+        className={`group absolute right-4 sm:right-8 bottom-6 sm:bottom-10 z-30 select-none pointer-events-auto ${
+          isFlying ? "cursor-default" : "cursor-pointer"
+        }`}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleGlobeClick}
-        title="Shake the Snow Globe! 🎄"
+        title={isFlying ? "Santa in flight... 🎅" : "Tap me to send Santa flying! 🎄"}
       >
         {/* Floating Holiday Speech Bubble when Clicked */}
-        {greeting && (
+        {greeting ? (
           <div className="speech-bubble-pop absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 px-3.5 py-1.5 font-mono text-xs font-bold text-white shadow-lg border border-emerald-300 z-40 pointer-events-none">
             {greeting}
             <div className="absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-2.5 h-2.5 bg-teal-600 rotate-45 border-r border-b border-emerald-300" />
+          </div>
+        ) : isFlying ? (
+          /* Active Flight Status Indicator */
+          <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-950/90 dark:bg-black/90 px-2.5 py-0.5 text-[10px] font-mono tracking-wide text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1 pointer-events-none animate-pulse">
+            <span>🎅</span>
+            <span>Santa in flight...</span>
+          </div>
+        ) : (
+          /* Prompt Pill on Hover */
+          <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-card/90 px-2.5 py-0.5 text-[10px] font-mono tracking-wide text-muted border border-border/80 shadow-xs flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <span>🎄</span>
+            <span>Tap for Santa!</span>
           </div>
         )}
 
         {/* 3D Snow Globe Container with Mouse Parallax & Shake Animation */}
         <div
-          className={`globe-3d relative w-24 h-28 sm:w-28 sm:h-32 flex flex-col items-center justify-end cursor-pointer transition-transform duration-150 ${
+          className={`globe-3d relative w-28 h-32 sm:w-36 sm:h-40 flex flex-col items-center justify-end cursor-pointer transition-transform duration-150 ${
             isShaking ? "globe-shaking" : ""
           }`}
           style={{
@@ -245,52 +273,78 @@ export default function ChristmasEffects({
               : `rotateX(${mouseTilt.y}deg) rotateY(${mouseTilt.x}deg) scale(1)`,
           }}
         >
-          {/* Ground Soft Glow & Shadow */}
-          <div className="absolute bottom-0 w-20 h-4 rounded-full bg-emerald-500/25 blur-md" />
+          {/* Ground Soft Glow & Volumetric Shadow */}
+          <div className="absolute -bottom-2 w-28 sm:w-36 h-6 rounded-full bg-emerald-500/20 dark:bg-emerald-400/15 blur-lg pointer-events-none" />
+          <div className="absolute bottom-0 w-22 sm:w-28 h-4 rounded-full bg-black/40 blur-xs pointer-events-none" />
 
-          {/* Golden Ornate Pedestal Base */}
-          <div className="relative z-10 w-16 h-5 rounded-md bg-gradient-to-r from-amber-600 via-amber-300 to-amber-700 shadow-md border-t border-amber-200 flex items-center justify-center">
-            <div className="w-10 h-1.5 rounded-full bg-amber-950/40 border border-amber-400/40" />
+          {/* Ornate Mahogany & Polished Brass Pedestal Base */}
+          <div className="relative z-10 w-20 sm:w-24 h-6 sm:h-7 rounded-lg bg-gradient-to-r from-amber-950 via-amber-800 to-amber-950 shadow-xl border-t-2 border-amber-400/70 flex flex-col items-center justify-between p-0.5">
+            <div className="w-14 sm:w-18 h-1 rounded-full bg-amber-300/40 border border-amber-300/30" />
+            <div className="w-16 sm:w-20 h-2 rounded-xs bg-gradient-to-r from-amber-600 via-amber-300 to-amber-700 shadow-inner flex items-center justify-center">
+              <span className="text-[7px] font-mono tracking-widest text-amber-950 uppercase font-black">2026</span>
+            </div>
+            <div className="w-18 sm:w-22 h-1 rounded-full bg-black/60" />
           </div>
 
-          {/* 3D Glass Sphere with Miniature Spinning Pine Tree Inside */}
-          <div className="relative -mb-1 w-22 h-22 sm:w-26 sm:h-26 rounded-full border border-white/40 bg-gradient-to-tr from-emerald-950/40 via-cyan-900/20 to-white/20 backdrop-blur-[2px] shadow-[0_0_25px_rgba(52,211,153,0.35)] overflow-hidden flex items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-200">
+          {/* 3D Glass Sphere with Volumetric Glass Shading & Pine Tree Inside */}
+          <div className="relative -mb-1.5 w-26 h-26 sm:w-32 sm:h-32 rounded-full border border-white/50 bg-gradient-to-tr from-emerald-950/50 via-cyan-950/20 to-white/30 backdrop-blur-[2px] shadow-[0_0_35px_rgba(52,211,153,0.45),inset_0_0_20px_rgba(255,255,255,0.25)] overflow-hidden flex items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-200">
             {/* Top Glass Specular Arc Reflection */}
-            <div className="absolute top-2 left-3 w-8 h-4 rounded-full bg-white/60 blur-[0.6px] -rotate-45" />
+            <div className="absolute top-2.5 left-3.5 w-10 sm:w-12 h-5 rounded-full bg-gradient-to-b from-white/80 to-transparent blur-[0.6px] -rotate-45 pointer-events-none" />
+            {/* Bottom Glass Glow */}
+            <div className="absolute bottom-1 right-2 w-8 h-3 rounded-full bg-white/25 blur-[1px] rotate-12 pointer-events-none" />
+
+            {/* Snowbank on Glass Floor */}
+            <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-white/95 via-sky-100/90 to-transparent rounded-b-full pointer-events-none flex items-center justify-center">
+              <div className="w-16 h-2 bg-white rounded-full blur-[0.5px]" />
+            </div>
 
             {/* 3D Miniature Spinning Tree */}
             <div
-              className={`relative w-12 h-14 flex flex-col items-center justify-center ${
+              className={`relative z-10 w-14 h-16 sm:w-16 sm:h-20 -mb-2 flex flex-col items-center justify-center ${
                 isShaking ? "animate-spin" : "inner-tree-spin"
               }`}
             >
               {/* Golden Tree Topper Star */}
               <div className="star-twinkling -mb-1 z-20">
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-amber-300 fill-current drop-shadow-[0_0_6px_#FBBF24]">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-amber-300 fill-current drop-shadow-[0_0_8px_#FBBF24]">
                   <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" />
                 </svg>
               </div>
 
-              {/* Tier 1 (Top) */}
-              <div className="w-6 h-4 bg-gradient-to-b from-emerald-400 to-emerald-700 rounded-t-sm shadow-xs border-b border-emerald-300/40" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />
-              {/* Tier 2 (Middle) */}
-              <div className="-mt-1.5 w-9 h-5 bg-gradient-to-b from-emerald-500 to-emerald-800 rounded-t-sm shadow-xs border-b border-emerald-300/40" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />
-              {/* Tier 3 (Bottom) */}
-              <div className="-mt-2 w-12 h-6 bg-gradient-to-b from-emerald-600 to-emerald-900 rounded-t-sm shadow-xs border-b border-emerald-300/40" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }} />
+              {/* Tier 1 (Top Pine Frond) */}
+              <div className="relative w-7 h-4 bg-gradient-to-b from-emerald-400 via-emerald-600 to-emerald-800 rounded-t-xs shadow-xs" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}>
+                <div className="absolute bottom-0 inset-x-0 h-1 bg-white/70" />
+              </div>
+              {/* Tier 2 (Middle Pine Frond) */}
+              <div className="-mt-1.5 relative w-10 h-5 bg-gradient-to-b from-emerald-500 via-emerald-700 to-emerald-900 rounded-t-xs shadow-xs" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}>
+                <div className="absolute bottom-0 inset-x-0 h-1 bg-white/70" />
+                {/* Micro Ornaments */}
+                <span className="absolute left-1 top-2 w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_3px_#F43F5E]" />
+                <span className="absolute right-1.5 top-2.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_3px_#FBBF24]" />
+              </div>
+              {/* Tier 3 (Bottom Pine Frond) */}
+              <div className="-mt-2 relative w-13 h-6 bg-gradient-to-b from-emerald-600 via-emerald-800 to-emerald-950 rounded-t-xs shadow-xs" style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}>
+                <div className="absolute bottom-0 inset-x-0 h-1 bg-white/80" />
+                {/* Micro Ornaments */}
+                <span className="absolute left-2.5 top-3 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_3px_#38BDF8]" />
+                <span className="absolute right-3 top-2.5 w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_3px_#F43F5E]" />
+              </div>
 
-              {/* Mini Trunk */}
-              <div className="w-2.5 h-2 bg-amber-900 rounded-b-xs" />
+              {/* Wooden Trunk */}
+              <div className="w-3 h-2.5 bg-gradient-to-b from-amber-900 to-amber-950 rounded-b-xs shadow-xs" />
             </div>
 
             {/* Swirling Glass Micro Snow Flakes */}
-            <div className="absolute inset-0 pointer-events-none">
-              <span className={`star-twinkling absolute top-4 right-5 text-[8px] text-white ${isShaking ? "animate-ping" : ""}`}>❄</span>
-              <span className={`star-twinkling absolute bottom-5 left-4 text-[7px] text-white/80 ${isShaking ? "animate-pulse" : ""}`} style={{ animationDelay: "1.2s" }}>•</span>
-              <span className={`star-twinkling absolute top-8 left-6 text-[9px] text-white/90 ${isShaking ? "animate-bounce" : ""}`} style={{ animationDelay: "0.6s" }}>❅</span>
+            <div className="absolute inset-0 pointer-events-none z-20">
+              <span className={`star-twinkling absolute top-4 right-5 text-[9px] text-white ${isShaking ? "animate-ping" : ""}`}>❄</span>
+              <span className={`star-twinkling absolute bottom-6 left-4 text-[7px] text-white/90 ${isShaking ? "animate-pulse" : ""}`} style={{ animationDelay: "1.2s" }}>•</span>
+              <span className={`star-twinkling absolute top-8 left-5 text-[10px] text-white/95 ${isShaking ? "animate-bounce" : ""}`} style={{ animationDelay: "0.6s" }}>❅</span>
+              <span className={`star-twinkling absolute top-12 right-4 text-[8px] text-white/80`} style={{ animationDelay: "1.8s" }}>•</span>
               {isShaking && (
                 <>
-                  <span className="animate-spin absolute top-6 right-8 text-[7px] text-amber-200">✨</span>
-                  <span className="animate-ping absolute bottom-7 right-6 text-[8px] text-white">❄</span>
+                  <span className="animate-spin absolute top-6 right-8 text-[9px] text-amber-200">✨</span>
+                  <span className="animate-ping absolute bottom-7 right-6 text-[10px] text-white">❄</span>
+                  <span className="animate-pulse absolute top-10 left-8 text-[8px] text-white">❄</span>
                 </>
               )}
             </div>
@@ -333,91 +387,331 @@ export default function ChristmasEffects({
         </div>
       ))}
 
-      {/* 4. 3D Santa's Sleigh with Reindeer & Magical Particle Ribbon */}
+      {/* 4. Realistic 3D Santa's Sleigh with Reindeer & Magical Starlight Wake */}
       {sleigh && (
         <div
           key={sleigh.id}
-          onAnimationEnd={removeSleigh}
-          className="santa-flying-3d absolute left-0"
+          onAnimationEnd={(e) => {
+            if (e.target === e.currentTarget) {
+              removeSleigh();
+            }
+          }}
+          className="santa-flying-3d absolute left-0 pointer-events-none z-30 select-none"
           style={{
-            top: "8%",
+            top: "4.75rem",
             animationDuration: `${sleigh.duration}s`,
-            width: "210px",
+            width: "360px",
+            maxWidth: "90vw",
             transformStyle: "preserve-3d",
           }}
         >
-          <div className="relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-44 h-8 bg-gradient-to-r from-transparent via-amber-400/30 to-amber-300/10 blur-md pointer-events-none -rotate-3" />
+          <div className="relative w-full">
+            {/* Ambient Golden Fairy Dust Halo Behind the Sleigh */}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-64 h-16 bg-gradient-to-r from-transparent via-amber-400/35 to-amber-200/10 blur-xl pointer-events-none -rotate-2" />
 
             <svg
-              viewBox="0 0 260 70"
+              viewBox="0 0 480 160"
               fill="none"
-              className="w-full drop-shadow-[0_4px_16px_rgba(251,191,36,0.8)]"
+              className="w-full overflow-visible drop-shadow-[0_8px_24px_rgba(251,191,36,0.75)]"
             >
               <defs>
+                {/* 3D Glossy Sleigh Lacquer Gradient */}
                 <linearGradient id="sleighRed3D" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#FF4D5E" />
-                  <stop offset="45%" stopColor="#E63946" />
-                  <stop offset="100%" stopColor="#8A0E17" />
+                  <stop offset="0%" stopColor="#FF5C6C" />
+                  <stop offset="25%" stopColor="#E61E34" />
+                  <stop offset="65%" stopColor="#A80D1D" />
+                  <stop offset="100%" stopColor="#4A000A" />
                 </linearGradient>
 
+                {/* 3D Metallic Polished Gold Gradient */}
                 <linearGradient id="goldRunner3D" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#F59E0B" />
-                  <stop offset="50%" stopColor="#FDE68A" />
-                  <stop offset="100%" stopColor="#D97706" />
+                  <stop offset="0%" stopColor="#D97706" />
+                  <stop offset="25%" stopColor="#FBBF24" />
+                  <stop offset="50%" stopColor="#FFFBEB" />
+                  <stop offset="75%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#B45309" />
                 </linearGradient>
 
-                <linearGradient id="reindeerBody3D" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#FBBF24" />
-                  <stop offset="60%" stopColor="#D97706" />
-                  <stop offset="100%" stopColor="#78350F" />
+                {/* Lead Reindeer (Rudolph) Fur Gradient */}
+                <linearGradient id="reindeerLeadCoat" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#C97A3E" />
+                  <stop offset="40%" stopColor="#964B15" />
+                  <stop offset="85%" stopColor="#5C2C0A" />
+                  <stop offset="100%" stopColor="#381804" />
+                </linearGradient>
+
+                {/* Staggered Companion Reindeer Fur Gradient (Darker for depth) */}
+                <linearGradient id="reindeerBackCoat" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#A85F2C" />
+                  <stop offset="50%" stopColor="#78350F" />
+                  <stop offset="100%" stopColor="#2E1204" />
+                </linearGradient>
+
+                {/* Branching Antlers Gradient */}
+                <linearGradient id="antlersGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#78350F" />
+                  <stop offset="50%" stopColor="#D97706" />
+                  <stop offset="100%" stopColor="#FDE68A" />
+                </linearGradient>
+
+                {/* Rudolph's Luminous Glowing Red Nose */}
+                <radialGradient id="rudolphNoseGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="35%" stopColor="#FF1E44" />
+                  <stop offset="80%" stopColor="#DC2626" />
+                  <stop offset="100%" stopColor="#991B1B" />
+                </radialGradient>
+
+                {/* Santa's Fluffy White Fur Trim */}
+                <linearGradient id="whiteFurGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="60%" stopColor="#F1F5F9" />
+                  <stop offset="100%" stopColor="#CBD5E1" />
+                </linearGradient>
+
+                {/* Toy Sack Burlap Gradient */}
+                <linearGradient id="toySackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#D4A373" />
+                  <stop offset="50%" stopColor="#9C6644" />
+                  <stop offset="100%" stopColor="#58311B" />
                 </linearGradient>
               </defs>
 
-              <g fill="url(#reindeerBody3D)">
-                <path d="M246 16l5-9m-3 0l-3 4m6-2l5-2M238 20c3-5 7-6 11-5l2 3-4 3-5 1z" />
-                <path d="M222 26c4-5 10-5 15-2l4 3-2 8-5-2-3 8-4-1 2-7-5-1-1 8-4-1 1-9z" />
-                <circle cx="251" cy="21" r="1.5" fill="#EF4444" className="drop-shadow-[0_0_3px_#EF4444]" />
+              {/* 1. Trailing Magical Starlight Wake (Fairy Dust Particles) */}
+              <g className="starlight-particles">
+                <path
+                  d="M 5 130 Q 50 145 105 132 Q 160 120 220 128"
+                  stroke="url(#goldRunner3D)"
+                  strokeWidth="2"
+                  opacity="0.6"
+                  strokeDasharray="6 4"
+                />
+                {/* Starburst Sparkles */}
+                <circle cx="18" cy="126" r="3" fill="#FDE047" className="drop-shadow-[0_0_8px_#F59E0B]" />
+                <circle cx="18" cy="126" r="1.2" fill="#FFFFFF" />
+                <circle cx="45" cy="138" r="4" fill="#FBBF24" className="drop-shadow-[0_0_6px_#F59E0B]" />
+                <circle cx="45" cy="138" r="1.5" fill="#FFFFFF" />
+                <circle cx="85" cy="122" r="3.5" fill="#FDE047" className="drop-shadow-[0_0_6px_#F59E0B]" />
+                <circle cx="130" cy="132" r="4.5" fill="#FBBF24" className="drop-shadow-[0_0_8px_#F59E0B]" />
+                <circle cx="130" cy="132" r="1.8" fill="#FFFFFF" />
+                <circle cx="180" cy="124" r="3" fill="#FDE047" />
               </g>
 
-              <g fill="url(#reindeerBody3D)">
-                <path d="M206 18l5-9m-3 0l-3 4m6-2l5-2M198 22c3-5 7-6 11-5l2 3-4 3-5 1z" />
-                <path d="M182 28c4-5 10-5 15-2l4 3-2 8-5-2-3 8-4-1 2-7-5-1-1 8-4-1 1-9z" />
+              {/* 2. COMPANION REINDEER (Back Layer for 3D Herd Depth) */}
+              <g fill="url(#reindeerBackCoat)" opacity="0.88">
+                {/* Antlers */}
+                <path
+                  d="M 334 38 C 330 26, 322 16, 318 10 M 331 32 C 334 26, 340 24, 343 26 M 326 22 C 331 18, 336 17, 338 20"
+                  stroke="url(#antlersGrad)"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                />
+                {/* Head, Ears & Muzzle */}
+                <path d="M 328 44 C 334 38, 348 40, 354 48 C 356 50, 350 56, 342 56 C 334 56, 326 50, 328 44 Z" />
+                <path d="M 330 40 L 324 35 L 328 32 Z" />
+                {/* Neck & Body */}
+                <path d="M 336 50 C 330 62, 318 72, 306 74 C 290 76, 274 74, 260 68 C 256 64, 258 58, 264 54 C 284 56, 308 52, 328 44 Z" />
+                {/* Reaching Forelegs */}
+                <path d="M 314 72 C 322 84, 332 96, 344 102 L 348 100 C 336 94, 326 82, 318 70 Z" fill="#6A2E07" />
+                <path d="M 308 73 C 314 86, 324 102, 334 110 L 338 108 C 328 100, 318 84, 312 72 Z" fill="#4E2004" />
+                {/* Kicking Hindlegs */}
+                <path d="M 268 66 C 258 78, 246 94, 234 104 L 230 101 C 242 90, 254 74, 264 64 Z" fill="#4E2004" />
+                <path d="M 262 64 C 252 76, 238 88, 224 96 L 221 93 C 235 84, 248 72, 258 62 Z" fill="#6A2E07" />
+                {/* Red Harness */}
+                <path d="M 326 54 C 320 64, 312 70, 304 73" stroke="#DC2626" strokeWidth="2.5" />
+                <circle cx="322" cy="58" r="2" fill="#FBBF24" />
+                <circle cx="316" cy="65" r="2" fill="#FBBF24" />
               </g>
 
-              <path
-                d="M120 38 Q150 40 190 30 Q210 27 232 25"
-                stroke="url(#goldRunner3D)"
-                strokeWidth="1.5"
-                strokeDasharray="4 2"
-              />
+              {/* 3. LEAD REINDEER (Rudolph in Foreground, Proud & Mighty) */}
+              <g>
+                {/* Grand Majestic Branching Antlers */}
+                <path
+                  d="M 444 32 C 440 18, 432 8, 426 2 M 441 25 C 445 18, 453 16, 457 18 M 435 15 C 442 10, 448 9, 452 12 M 428 6 C 432 1, 436 0, 440 2"
+                  stroke="url(#antlersGrad)"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+                {/* Muscular Deer Body */}
+                <path
+                  d="M 436 40 C 446 34, 460 38, 468 46 C 472 50, 464 58, 452 58 C 442 58, 434 50, 436 40 Z"
+                  fill="url(#reindeerLeadCoat)"
+                />
+                {/* Alert Pointed Ear & Dark Eye */}
+                <path d="M 438 36 L 430 30 L 434 26 Z" fill="#6A2E07" />
+                <circle cx="452" cy="44" r="2" fill="#1C1917" />
+                <circle cx="453" cy="43" r="0.6" fill="#FFFFFF" />
 
-              <path
-                d="M52 30 C58 20 72 18 88 20 L112 22 C118 22 120 26 118 31 L112 43 C102 48 84 50 66 47 L46 42 C40 38 42 33 52 30 Z"
-                fill="url(#sleighRed3D)"
-                stroke="#FFE4E6"
-                strokeWidth="0.8"
-              />
+                {/* Powerful Arched Neck, Flank & Tail */}
+                <path
+                  d="M 446 46 C 440 60, 426 72, 412 76 C 394 78, 376 76, 360 70 C 356 66, 358 58, 366 54 C 388 57, 414 52, 436 42 Z"
+                  fill="url(#reindeerLeadCoat)"
+                />
+                <path d="M 358 68 C 354 70, 352 76, 356 78 Z" fill="#FFFFFF" />
 
-              <circle cx="68" cy="24" r="9" fill="#991B1B" />
-              <circle cx="82" cy="20" r="10" fill="#BE123C" />
-              <path d="M78 18 C78 12 84 8 90 8 L91 18 Z" fill="#E11D48" />
-              <circle cx="92" cy="8" r="2.5" fill="#FFFFFF" />
-              <circle cx="84" cy="18" r="4.5" fill="#FED7AA" />
+                {/* Powerful Reaching Galloping Forelegs */}
+                <path d="M 422 74 C 430 88, 442 102, 456 108 L 460 106 C 446 99, 434 85, 426 72 Z" fill="url(#reindeerLeadCoat)" />
+                <path d="M 416 75 C 422 90, 434 108, 446 116 L 450 114 C 438 105, 426 88, 420 73 Z" fill="#5C2C0A" />
+                {/* Golden Hooves */}
+                <polygon points="456,108 462,106 460,111" fill="#1C1917" />
+                <polygon points="446,116 452,114 450,119" fill="#1C1917" />
 
-              <path
-                d="M40 54 C56 55 110 55 124 52 C132 50 134 45 130 40 M50 50 L56 38 M108 50 L110 38"
-                stroke="url(#goldRunner3D)"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
+                {/* Powerful Kicking Galloping Hindlegs */}
+                <path d="M 374 68 C 362 82, 348 100, 334 112 L 330 109 C 344 96, 358 78, 370 66 Z" fill="#5C2C0A" />
+                <path d="M 366 66 C 354 80, 338 94, 322 104 L 318 101 C 334 91, 350 76, 362 64 Z" fill="url(#reindeerLeadCoat)" />
+                {/* Golden Hooves */}
+                <polygon points="334,112 330,109 328,114" fill="#1C1917" />
+                <polygon points="322,104 318,101 316,106" fill="#1C1917" />
 
-              <circle cx="126" cy="36" r="3.5" fill="#FDE047" className="drop-shadow-[0_0_8px_#F59E0B]" />
-              <circle cx="126" cy="36" r="1.5" fill="#FFFFFF" />
+                {/* Rudolph's Red Collar Harness with Shiny Golden Bells */}
+                <path d="M 436 50 C 428 62, 418 70, 408 74" stroke="#DC2626" strokeWidth="3" />
+                <circle cx="432" cy="54" r="2.5" fill="#FBBF24" className="drop-shadow-[0_0_3px_#F59E0B]" />
+                <circle cx="424" cy="62" r="2.5" fill="#FBBF24" className="drop-shadow-[0_0_3px_#F59E0B]" />
+                <circle cx="414" cy="70" r="2.5" fill="#FBBF24" className="drop-shadow-[0_0_3px_#F59E0B]" />
 
-              <circle cx="36" cy="40" r="2" fill="#FEF08A" opacity="0.9" />
-              <circle cx="24" cy="46" r="1.5" fill="#FEF08A" opacity="0.7" />
-              <circle cx="10" cy="42" r="2" fill="#FDE047" opacity="0.5" />
+                {/* Rudolph's Iconic Glowing Red Nose (Radiant Starburst) */}
+                <circle cx="470" cy="50" r="6" fill="url(#rudolphNoseGlow)" className="drop-shadow-[0_0_12px_#EF4444]" />
+                <circle cx="470" cy="50" r="2.5" fill="#FFFFFF" />
+              </g>
+
+              {/* 4. Taut Golden Reins (Connecting Santa to Reindeer) */}
+              <g>
+                <path
+                  d="M 162 66 C 220 70, 300 72, 380 72 C 405 72, 420 68, 434 56"
+                  stroke="url(#goldRunner3D)"
+                  strokeWidth="2.2"
+                  strokeDasharray="6 2"
+                  className="drop-shadow-[0_0_4px_#FBBF24]"
+                />
+                <path
+                  d="M 162 68 C 210 74, 270 78, 330 76"
+                  stroke="url(#goldRunner3D)"
+                  strokeWidth="1.8"
+                  opacity="0.8"
+                />
+              </g>
+
+              {/* 5. OVERFLOWING SACK OF PRESENTS & TOYS (Sleigh Cargo) */}
+              <g>
+                {/* Big Burlap / Velvet Toy Sack */}
+                <path
+                  d="M 72 82 C 60 62, 68 40, 92 34 C 114 30, 134 44, 134 76 Z"
+                  fill="url(#toySackGrad)"
+                  stroke="#43281C"
+                  strokeWidth="1"
+                />
+                {/* Tied Rope at Top */}
+                <ellipse cx="102" cy="40" rx="14" ry="4" fill="url(#goldRunner3D)" />
+
+                {/* Emerald Green Present with Gold Ribbon */}
+                <polygon points="80,26 96,24 100,40 84,42" fill="#059669" stroke="#047857" strokeWidth="0.8" />
+                <line x1="88" y1="25" x2="92" y2="41" stroke="#FBBF24" strokeWidth="2.5" />
+                <line x1="82" y1="34" x2="98" y2="32" stroke="#FBBF24" strokeWidth="2.5" />
+
+                {/* Ruby Present with Gold Bow */}
+                <polygon points="102,22 118,26 114,42 98,38" fill="#DC2626" stroke="#B91C1C" strokeWidth="0.8" />
+                <circle cx="110" cy="24" r="3" fill="#FBBF24" />
+
+                {/* Striped Candy Cane */}
+                <path
+                  d="M 72 32 C 70 20, 80 16, 86 22 L 78 44"
+                  stroke="#FFFFFF"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 72 32 C 70 20, 80 16, 86 22 L 78 44"
+                  stroke="#EF4444"
+                  strokeWidth="4"
+                  strokeDasharray="4 4"
+                  strokeLinecap="round"
+                />
+              </g>
+
+              {/* 6. SANTA CLAUS HIMSELF (Jovial, Cheerful in 3D) */}
+              <g>
+                {/* Crimson Coat Torso */}
+                <path
+                  d="M 124 62 C 128 50, 146 48, 162 52 L 168 80 C 146 84, 130 82, 124 62 Z"
+                  fill="#DC2626"
+                />
+                {/* White Fur Trim on Coat */}
+                <path d="M 144 54 L 148 78" stroke="url(#whiteFurGrad)" strokeWidth="6" strokeLinecap="round" />
+                {/* Black Leather Belt with Gleaming Gold Buckle */}
+                <path d="M 128 72 C 140 74, 154 75, 166 73" stroke="#18181B" strokeWidth="6" />
+                <rect x="142" y="68" width="9" height="8" rx="1.5" fill="none" stroke="url(#goldRunner3D)" strokeWidth="2" />
+
+                {/* Santa's Rosy Cheerful Face */}
+                <circle cx="148" cy="42" r="9" fill="#FED7AA" />
+                <circle cx="144" cy="43" r="2.5" fill="#FDA4AF" opacity="0.85" />
+                <circle cx="152" cy="43" r="2.5" fill="#FDA4AF" opacity="0.85" />
+                {/* Twinkling Happy Eyes */}
+                <path d="M 143 40 Q 145 38 147 40" stroke="#18181B" strokeWidth="1.2" fill="none" />
+                <path d="M 149 40 Q 151 38 153 40" stroke="#18181B" strokeWidth="1.2" fill="none" />
+
+                {/* Volumetric White Flowing Moustache & 3D Beard */}
+                <path
+                  d="M 140 44 C 136 54, 140 70, 148 74 C 158 70, 162 54, 156 44 C 152 47, 144 47, 140 44 Z"
+                  fill="url(#whiteFurGrad)"
+                  stroke="#E2E8F0"
+                  strokeWidth="0.8"
+                />
+
+                {/* Classic Floppy Red Nightcap Hat */}
+                <path
+                  d="M 139 38 C 139 26, 154 18, 172 24 C 166 32, 156 38, 139 38 Z"
+                  fill="#DC2626"
+                />
+                {/* Fluffy Hat Brim & Pompom */}
+                <path d="M 137 38 C 145 36, 155 37, 162 40" stroke="url(#whiteFurGrad)" strokeWidth="5" strokeLinecap="round" />
+                <circle cx="174" cy="24" r="5" fill="url(#whiteFurGrad)" className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]" />
+
+                {/* Arm Holding Reins / Waving Glove */}
+                <path d="M 154 58 C 160 62, 166 66, 170 66" stroke="#DC2626" strokeWidth="6" strokeLinecap="round" />
+                <circle cx="172" cy="66" r="4.5" fill="url(#whiteFurGrad)" />
+              </g>
+
+              {/* 7. VICTORIAN SLEIGH CARRIAGE (Deep Crimson Hull & Baroque Gold Trim) */}
+              <g>
+                {/* Sleigh Main Hull */}
+                <path
+                  d="M 54 78 C 42 94, 46 112, 70 114 L 178 116 C 196 116, 204 104, 196 90 C 190 80, 176 82, 168 85 L 86 80 C 74 68, 60 68, 54 78 Z"
+                  fill="url(#sleighRed3D)"
+                  stroke="#FFE4E6"
+                  strokeWidth="0.6"
+                />
+
+                {/* Scrolled Baroque Gilded Upper Rim */}
+                <path
+                  d="M 54 78 C 64 68, 80 78, 96 81 L 170 85 C 182 82, 196 82, 198 92"
+                  stroke="url(#goldRunner3D)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  className="drop-shadow-[0_1px_4px_#F59E0B]"
+                />
+
+                {/* Sleigh Carriage Hanging Brass Lantern */}
+                <g>
+                  <line x1="192" y1="92" x2="192" y2="100" stroke="url(#goldRunner3D)" strokeWidth="1.5" />
+                  <rect x="189" y="100" width="6" height="8" rx="1" fill="#FDE047" stroke="url(#goldRunner3D)" strokeWidth="1" className="drop-shadow-[0_0_8px_#F59E0B]" />
+                  <circle cx="192" cy="104" r="2" fill="#FFFFFF" />
+                </g>
+
+                {/* Dual Curled Golden Sleigh Runners */}
+                {/* Front & Rear Support Struts */}
+                <line x1="80" y1="112" x2="84" y2="128" stroke="url(#goldRunner3D)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="126" y1="114" x2="128" y2="129" stroke="url(#goldRunner3D)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="170" y1="114" x2="172" y2="130" stroke="url(#goldRunner3D)" strokeWidth="3" strokeLinecap="round" />
+
+                {/* Magnificent Curled Golden Runner */}
+                <path
+                  d="M 40 128 C 32 122, 34 112, 44 110 C 54 108, 64 118, 76 126 L 195 131 C 212 131, 222 122, 218 108 C 214 98, 202 96, 196 102"
+                  stroke="url(#goldRunner3D)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  className="drop-shadow-[0_2px_8px_#D97706]"
+                />
+              </g>
             </svg>
           </div>
         </div>

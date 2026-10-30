@@ -305,9 +305,12 @@ export default function AdminThemesPage() {
               {/* Default Theme Card */}
               <button
                 type="button"
-                onClick={() => setSelectedTheme("default")}
+                onClick={() => {
+                  setSelectedTheme("default");
+                  setAutoByDate(false);
+                }}
                 className={`flex flex-col text-left p-4 rounded-2xl border transition cursor-pointer ${
-                  selectedTheme === "default"
+                  selectedTheme === "default" && !autoByDate
                     ? "border-amber-400 bg-amber-500/10 shadow-sm"
                     : "border-border bg-card hover:border-accent/40"
                 }`}
@@ -326,9 +329,12 @@ export default function AdminThemesPage() {
               {/* Halloween Theme Card */}
               <button
                 type="button"
-                onClick={() => setSelectedTheme("halloween")}
+                onClick={() => {
+                  setSelectedTheme("halloween");
+                  setAutoByDate(false);
+                }}
                 className={`flex flex-col text-left p-4 rounded-2xl border transition cursor-pointer ${
-                  selectedTheme === "halloween"
+                  selectedTheme === "halloween" && !autoByDate
                     ? "border-orange-500 bg-orange-500/10 shadow-sm"
                     : "border-border bg-card hover:border-orange-500/40"
                 }`}
@@ -347,9 +353,12 @@ export default function AdminThemesPage() {
               {/* Diwali Theme Card */}
               <button
                 type="button"
-                onClick={() => setSelectedTheme("diwali")}
+                onClick={() => {
+                  setSelectedTheme("diwali");
+                  setAutoByDate(false);
+                }}
                 className={`flex flex-col text-left p-4 rounded-2xl border transition cursor-pointer ${
-                  selectedTheme === "diwali"
+                  selectedTheme === "diwali" && !autoByDate
                     ? "border-amber-400 bg-amber-500/15 shadow-sm"
                     : "border-border bg-card hover:border-amber-400/40"
                 }`}
@@ -368,9 +377,12 @@ export default function AdminThemesPage() {
               {/* Christmas Theme Card */}
               <button
                 type="button"
-                onClick={() => setSelectedTheme("christmas")}
+                onClick={() => {
+                  setSelectedTheme("christmas");
+                  setAutoByDate(false);
+                }}
                 className={`flex flex-col text-left p-4 rounded-2xl border transition cursor-pointer ${
-                  selectedTheme === "christmas"
+                  selectedTheme === "christmas" && !autoByDate
                     ? "border-emerald-500 bg-emerald-500/10 shadow-sm"
                     : "border-border bg-card hover:border-emerald-500/40"
                 }`}
@@ -602,36 +614,68 @@ export default function AdminThemesPage() {
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px] font-mono">
               <button
                 type="button"
-                onClick={() => setSimulatedDate(new Date(2026, 9, 31))} // Oct 31
-                className="p-2 rounded-xl border border-border bg-card hover:border-orange-500/40 text-muted hover:text-text transition cursor-pointer text-center"
+                onClick={() => {
+                  setAutoByDate(true);
+                  setSimulatedDate(new Date(2026, 9, 31)); // Oct 31
+                }}
+                className={`p-2 rounded-xl border transition cursor-pointer text-center ${
+                  autoByDate && activeDate.getMonth() === 9
+                    ? "border-orange-500 bg-orange-500/15 text-orange-400 font-bold"
+                    : "border-border bg-card hover:border-orange-500/40 text-muted hover:text-text"
+                }`}
               >
                 🎃 Oct 31 (Halloween)
               </button>
               <button
                 type="button"
-                onClick={() => setSimulatedDate(new Date(2026, 10, 10))} // Nov 10
-                className="p-2 rounded-xl border border-border bg-card hover:border-amber-400/50 text-muted hover:text-amber-400 transition cursor-pointer text-center"
+                onClick={() => {
+                  setAutoByDate(true);
+                  setSimulatedDate(new Date(2026, 10, 10)); // Nov 10
+                }}
+                className={`p-2 rounded-xl border transition cursor-pointer text-center ${
+                  autoByDate && activeDate.getMonth() === 10
+                    ? "border-amber-400 bg-amber-500/20 text-amber-400 font-bold"
+                    : "border-border bg-card hover:border-amber-400/50 text-muted hover:text-amber-400"
+                }`}
               >
                 🪔 Nov 10 (Diwali)
               </button>
               <button
                 type="button"
-                onClick={() => setSimulatedDate(new Date(2026, 11, 25))} // Dec 25
-                className="p-2 rounded-xl border border-border bg-card hover:border-emerald-500/40 text-muted hover:text-text transition cursor-pointer text-center"
+                onClick={() => {
+                  setAutoByDate(true);
+                  setSimulatedDate(new Date(2026, 11, 25)); // Dec 25
+                }}
+                className={`p-2 rounded-xl border transition cursor-pointer text-center ${
+                  autoByDate && activeDate.getMonth() === 11
+                    ? "border-emerald-500 bg-emerald-500/15 text-emerald-400 font-bold"
+                    : "border-border bg-card hover:border-emerald-500/40 text-muted hover:text-text"
+                }`}
               >
                 🎄 Dec 25 (Christmas)
               </button>
               <button
                 type="button"
-                onClick={() => setSimulatedDate(new Date(2026, 6, 4))} // July 4
-                className="p-2 rounded-xl border border-border bg-card hover:border-accent/40 text-muted hover:text-text transition cursor-pointer text-center"
+                onClick={() => {
+                  setAutoByDate(true);
+                  setSimulatedDate(new Date(2026, 6, 4)); // July 4
+                }}
+                className={`p-2 rounded-xl border transition cursor-pointer text-center ${
+                  autoByDate && activeDate.getMonth() === 6
+                    ? "border-accent bg-accent/15 text-accent-text font-bold"
+                    : "border-border bg-card hover:border-accent/40 text-muted hover:text-text"
+                }`}
               >
                 🌌 July 4 (Default)
               </button>
               <button
                 type="button"
                 onClick={() => setSimulatedDate(null)}
-                className="p-2 rounded-xl border border-border bg-card hover:border-accent text-accent-text transition cursor-pointer text-center font-bold"
+                className={`p-2 rounded-xl border transition cursor-pointer text-center font-bold ${
+                  !simulatedDate
+                    ? "border-accent bg-accent/20 text-accent-text"
+                    : "border-border bg-card hover:border-accent text-muted hover:text-text"
+                }`}
               >
                 ⏱ Live Today
               </button>
