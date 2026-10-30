@@ -1088,27 +1088,27 @@ html:not(.dark)[data-season="christmas"] .galaxy-card {
   transform-style: preserve-3d;
 }
 
-/* 6. Realistic 3D Santa's Sleigh with Dynamic Sweeping Flight and Banking (Safe Navbar & Headline Clearance) */
+/* 6. Realistic 3D Santa's Sleigh with Dynamic Sweeping Flight and Banking (Safe Navbar Clearance) */
 @keyframes santaSleigh3DArc {
   0% {
-    transform: translate3d(-35vw, 4vh, -120px) scale(0.85) rotateZ(-8deg);
+    transform: translate3d(-35vw, 6vh, -120px) scale(0.9) rotateZ(-8deg);
     opacity: 0;
   }
-  12% {
-    transform: translate3d(-5vw, 2vh, 20px) scale(0.98) rotateZ(-4deg);
+  15% {
+    transform: translate3d(-4vw, 4vh, 20px) scale(1.05) rotateZ(-4deg);
     opacity: 1;
   }
   48% {
-    /* Sweeps gracefully across the sky channel between navbar and heading */
-    transform: translate3d(36vw, 0vh, 100px) scale(1.08) rotateZ(2deg);
+    /* Sweeps majestically across center sky channel with 50px+ navbar clearance */
+    transform: translate3d(36vw, 2vh, 80px) scale(1.18) rotateZ(1deg);
     opacity: 1;
   }
-  80% {
-    transform: translate3d(82vw, 3vh, 40px) scale(0.98) rotateZ(6deg);
+  78% {
+    transform: translate3d(82vw, 4vh, 30px) scale(1.02) rotateZ(6deg);
     opacity: 0.98;
   }
   100% {
-    transform: translate3d(125vw, 6vh, -180px) scale(0.75) rotateZ(10deg);
+    transform: translate3d(125vw, 8vh, -180px) scale(0.75) rotateZ(10deg);
     opacity: 0;
   }
 }
@@ -1118,6 +1118,83 @@ html:not(.dark)[data-season="christmas"] .galaxy-card {
   animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
   animation-fill-mode: forwards;
   will-change: transform, opacity;
+}
+
+/* 7. Dropped Christmas Gift with Parachute Descent & Landing Bounce */
+@keyframes giftParachuteDescent {
+  0% {
+    transform: translate3d(-50%, 0px, 0) scale(0.65) rotate(-6deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translate3d(-50%, 45px, 0) scale(0.85) rotate(5deg);
+  }
+  45% {
+    transform: translate3d(calc(-50% - 14px), 140px, 0) scale(1) rotate(-4deg);
+  }
+  75% {
+    transform: translate3d(calc(-50% + 10px), 230px, 0) scale(1.05) rotate(3deg);
+  }
+  100% {
+    transform: translate3d(-50%, 310px, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.gift-dropping {
+  animation: giftParachuteDescent 2.2s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes giftLandBounce {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.22, 0.82) rotate(-4deg);
+  }
+  50% {
+    transform: scale(0.9, 1.18) translateY(-16px) rotate(5deg);
+  }
+  75% {
+    transform: scale(1.06, 0.94) translateY(-4px) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.gift-landed-bounce {
+  animation: giftLandBounce 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes parachuteFadeAway {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7) translateY(8px);
+  }
+}
+
+.parachute-fade {
+  animation: parachuteFadeAway 0.7s ease-out forwards;
+}
+
+@keyframes giftSparkleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+
+.gift-resting-bob {
+  animation: giftSparkleFloat 3.6s infinite ease-in-out;
 }
 
 /* Accessibility: Respect prefers-reduced-motion */

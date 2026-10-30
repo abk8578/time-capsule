@@ -20,6 +20,11 @@ interface SleighFlight3D {
   duration: number;
 }
 
+interface DroppedGift {
+  id: number;
+  status: "falling" | "landed" | "opened";
+}
+
 interface ChristmasEffectsProps {
   intensity?: ThemeIntensity;
   isContained?: boolean;
@@ -40,6 +45,7 @@ export default function ChristmasEffects({
 }: ChristmasEffectsProps) {
   const [snowflakes, setSnowflakes] = useState<Snowflake3D[]>([]);
   const [sleigh, setSleigh] = useState<SleighFlight3D | null>(null);
+  const [droppedGift, setDroppedGift] = useState<DroppedGift | null>(null);
   const [isFlying, setIsFlying] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
@@ -48,9 +54,13 @@ export default function ChristmasEffects({
 
   const nextSnowId = useRef(1);
   const nextSleighId = useRef(1);
+  const nextGiftId = useRef(1);
   const isFlyingRef = useRef(false);
   const greetingTimeout = useRef<NodeJS.Timeout | null>(null);
   const sleighSafetyTimeout = useRef<NodeJS.Timeout | null>(null);
+  const giftDropTimer = useRef<NodeJS.Timeout | null>(null);
+  const giftLandTimer = useRef<NodeJS.Timeout | null>(null);
+  const giftAutoCleanupTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Scaled by intensity
   const maxSnow = intensity === 1 ? 16 : intensity === 2 ? 32 : 52;
@@ -103,11 +113,33 @@ export default function ChristmasEffects({
     playJingleChime();
 
     // Launch Santa in flight across the sky!
-    const flightDuration = 6.2;
+    const flightDuration = 6.8;
     setSleigh({
       id: nextSleighId.current++,
       duration: flightDuration,
     });
+
+    // Schedule Gift Drop when Santa reaches screen center apex (~2.9s into flight)
+    if (giftDropTimer.current) clearTimeout(giftDropTimer.current);
+    giftDropTimer.current = setTimeout(() => {
+      setDroppedGift({
+        id: nextGiftId.current++,
+        status: "falling",
+      });
+    }, 2900);
+
+    // Schedule Gift Touchdown / Landing bounce at ~5.1s
+    if (giftLandTimer.current) clearTimeout(giftLandTimer.current);
+    giftLandTimer.current = setTimeout(() => {
+      setDroppedGift((prev) => (prev ? { ...prev, status: "landed" } : null));
+      playJingleChime();
+    }, 5100);
+
+    // Auto-dismiss landed gift gracefully after 14 seconds
+    if (giftAutoCleanupTimer.current) clearTimeout(giftAutoCleanupTimer.current);
+    giftAutoCleanupTimer.current = setTimeout(() => {
+      setDroppedGift(null);
+    }, 14000);
 
     // Spawn an instant flurry of fresh snowflakes around the globe
     const flurry: Snowflake3D[] = [];
@@ -139,6 +171,17 @@ export default function ChristmasEffects({
     setTimeout(() => {
       setIsShaking(false);
     }, 750);
+  };
+
+  // Handle tap / click on the dropped gift
+  const handleGiftClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!droppedGift || droppedGift.status !== "landed") return;
+    setDroppedGift({ ...droppedGift, status: "opened" });
+    playJingleChime();
+    setTimeout(() => {
+      setDroppedGift(null);
+    }, 3800);
   };
 
   // 3D Parallax Tilt on Hover
@@ -204,9 +247,13 @@ export default function ChristmasEffects({
       clearInterval(snowTimer);
       if (sleighSafetyTimeout.current) clearTimeout(sleighSafetyTimeout.current);
       if (greetingTimeout.current) clearTimeout(greetingTimeout.current);
+      if (giftDropTimer.current) clearTimeout(giftDropTimer.current);
+      if (giftLandTimer.current) clearTimeout(giftLandTimer.current);
+      if (giftAutoCleanupTimer.current) clearTimeout(giftAutoCleanupTimer.current);
       isFlyingRef.current = false;
       setSnowflakes([]);
       setSleigh(null);
+      setDroppedGift(null);
     };
   }, [maxSnow, snowIntervalMs]);
 
@@ -398,10 +445,10 @@ export default function ChristmasEffects({
           }}
           className="santa-flying-3d absolute left-0 pointer-events-none z-30 select-none"
           style={{
-            top: "4.75rem",
+            top: "calc(5.5rem + 4vh)",
             animationDuration: `${sleigh.duration}s`,
-            width: "360px",
-            maxWidth: "90vw",
+            width: "480px",
+            maxWidth: "92vw",
             transformStyle: "preserve-3d",
           }}
         >
@@ -712,6 +759,195 @@ export default function ChristmasEffects({
                   className="drop-shadow-[0_2px_8px_#D97706]"
                 />
               </g>
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Dropped Christmas Gift with Parachute Falling from Santa in the Center */}
+      {droppedGift && (
+        <div
+          key={droppedGift.id}
+          onClick={handleGiftClick}
+          className={`absolute left-1/2 pointer-events-auto select-none z-40 ${
+            droppedGift.status === "falling"
+              ? "gift-dropping"
+              : droppedGift.status === "landed"
+              ? "gift-resting-bob cursor-pointer"
+              : "cursor-default"
+          }`}
+          style={{
+            top: "calc(5.5rem + 4vh + 60px)",
+            transform:
+              droppedGift.status === "falling"
+                ? undefined
+                : "translate3d(-50%, 310px, 0)",
+          }}
+          title={
+            droppedGift.status === "landed"
+              ? "Tap to open your Holiday Gift! 🎁✨"
+              : undefined
+          }
+        >
+          {/* Landing / Opened Celebration Banner */}
+          {droppedGift.status === "landed" && (
+            <div className="speech-bubble-pop absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 px-3.5 py-1 text-[11px] font-sans font-bold text-white shadow-xl border border-amber-300 pointer-events-none flex items-center gap-1.5 animate-bounce">
+              <span>🎁</span>
+              <span>Holiday Gift Delivered! Tap to open! ✨</span>
+            </div>
+          )}
+
+          {droppedGift.status === "opened" && (
+            <div className="speech-bubble-pop absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 px-4 py-1.5 font-sans font-bold text-white shadow-2xl border-2 border-amber-300 pointer-events-none flex items-center gap-1.5 animate-pulse">
+              <span>🌟</span>
+              <span>Merry Christmas! Joy & Magic across time! 🎄</span>
+            </div>
+          )}
+
+          {/* Golden Starlight Halo Around Gift */}
+          <div className="absolute -inset-4 rounded-full bg-amber-400/25 blur-md pointer-events-none" />
+
+          {/* Parachute on top (visible while falling, folds away on landing) */}
+          <div
+            className={`flex flex-col items-center ${
+              droppedGift.status === "falling" ? "block" : "parachute-fade"
+            }`}
+          >
+            {/* Parachute Canopy SVG */}
+            <svg
+              viewBox="0 0 90 55"
+              className="w-20 h-12 overflow-visible drop-shadow-[0_2px_8px_rgba(225,29,72,0.6)]"
+            >
+              <defs>
+                <linearGradient id="chuteRed" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#BE123C" />
+                  <stop offset="50%" stopColor="#FB7185" />
+                  <stop offset="100%" stopColor="#9F1239" />
+                </linearGradient>
+                <linearGradient id="chuteGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#D97706" />
+                  <stop offset="50%" stopColor="#FFFBEB" />
+                  <stop offset="100%" stopColor="#B45309" />
+                </linearGradient>
+              </defs>
+              {/* Canopy Panels */}
+              <path
+                d="M 5 38 C 5 10, 45 4, 45 4 C 45 4, 85 10, 85 38 C 75 42, 65 39, 58 38 C 50 39, 40 39, 32 38 C 25 39, 15 42, 5 38 Z"
+                fill="url(#chuteRed)"
+                stroke="rgba(255,255,255,0.6)"
+                strokeWidth="1"
+              />
+              {/* Gold Stripes */}
+              <path
+                d="M 22 17 C 28 26, 30 35, 32 38 C 40 39, 50 39, 58 38 C 60 35, 62 26, 68 17 C 56 12, 34 12, 22 17 Z"
+                fill="url(#chuteGold)"
+                opacity="0.95"
+              />
+              {/* Center Panel Scallop */}
+              <path
+                d="M 38 7 C 42 18, 43 28, 45 38"
+                stroke="#FFEAA7"
+                strokeWidth="1"
+                fill="none"
+                opacity="0.8"
+              />
+              {/* Suspension Cords Converging to Bottom Center */}
+              <line x1="6" y1="38" x2="45" y2="54" stroke="#FFD166" strokeWidth="1.2" opacity="0.85" />
+              <line x1="32" y1="38" x2="45" y2="54" stroke="#FFD166" strokeWidth="1.2" opacity="0.85" />
+              <line x1="58" y1="38" x2="45" y2="54" stroke="#FFD166" strokeWidth="1.2" opacity="0.85" />
+              <line x1="84" y1="38" x2="45" y2="54" stroke="#FFD166" strokeWidth="1.2" opacity="0.85" />
+            </svg>
+          </div>
+
+          {/* 3D Wrapped Christmas Gift Box */}
+          <div
+            className={`relative flex items-center justify-center -mt-1 ${
+              droppedGift.status === "landed" ? "gift-landed-bounce" : ""
+            }`}
+          >
+            <svg
+              viewBox="0 0 60 60"
+              className="w-13 h-13 overflow-visible drop-shadow-[0_4px_16px_rgba(251,191,36,0.9)] transition-transform duration-200 hover:scale-110 active:scale-95"
+            >
+              <defs>
+                <linearGradient id="boxVelvetRed" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FF385C" />
+                  <stop offset="45%" stopColor="#E11D48" />
+                  <stop offset="85%" stopColor="#9F1239" />
+                  <stop offset="100%" stopColor="#5B051A" />
+                </linearGradient>
+                <linearGradient id="boxLidRed" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FF6B8B" />
+                  <stop offset="100%" stopColor="#E11D48" />
+                </linearGradient>
+                <linearGradient id="satinGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#D97706" />
+                  <stop offset="35%" stopColor="#FDE68A" />
+                  <stop offset="65%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#B45309" />
+                </linearGradient>
+              </defs>
+
+              {/* Main Cube Body */}
+              <rect
+                x="10"
+                y="18"
+                width="40"
+                height="34"
+                rx="4"
+                fill="url(#boxVelvetRed)"
+                stroke="#FFE4E6"
+                strokeWidth="0.8"
+              />
+              {/* Lid Rim */}
+              <rect
+                x="7"
+                y="14"
+                width="46"
+                height="8"
+                rx="2.5"
+                fill="url(#boxLidRed)"
+                stroke="#FFE4E6"
+                strokeWidth="0.8"
+              />
+
+              {/* Vertical Gold Ribbon */}
+              <rect x="26" y="14" width="8" height="38" fill="url(#satinGold)" />
+              {/* Horizontal Gold Ribbon */}
+              <rect x="10" y="30" width="40" height="7" fill="url(#satinGold)" />
+
+              {/* Big Double-Loop Golden Ribbon Bow */}
+              <path
+                d="M 30 14 C 20 6, 12 10, 18 15 C 24 16, 28 14, 30 14 Z"
+                fill="url(#satinGold)"
+                stroke="#FFFBEB"
+                strokeWidth="0.8"
+              />
+              <path
+                d="M 30 14 C 40 6, 48 10, 42 15 C 36 16, 32 14, 30 14 Z"
+                fill="url(#satinGold)"
+                stroke="#FFFBEB"
+                strokeWidth="0.8"
+              />
+              <circle cx="30" cy="14" r="3.5" fill="#FFFBEB" stroke="#D97706" strokeWidth="1" />
+              <path
+                d="M 28 15 Q 24 24 20 28"
+                stroke="url(#satinGold)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+              <path
+                d="M 32 15 Q 36 24 40 28"
+                stroke="url(#satinGold)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+
+              {/* Sparkle Flares */}
+              <circle cx="48" cy="22" r="1.5" fill="#FFF" className="animate-ping" />
+              <circle cx="14" cy="42" r="1.2" fill="#FFEAA7" className="animate-pulse" />
             </svg>
           </div>
         </div>
